@@ -1,4 +1,5 @@
 ﻿using System;
+using Jotunn.Utils;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +8,6 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
-using Jotunn.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -30,6 +30,8 @@ namespace AsgardLegacy
 		public static long ServerID;
 		private static readonly Type patchType = typeof(AsgardLegacy);
 
+		public static AssetBundle runeTableAssets;
+
 		public static bool playerEnabled = true;
 		public static List<al_Player> al_playerList;
 		public static al_Player al_player;
@@ -49,16 +51,6 @@ namespace AsgardLegacy
 		public static ConfigEntry<bool> al_svr_allowAltarClassChange;
 		public static ConfigEntry<bool> al_svr_enforceConfigClass;
 		public static ConfigEntry<bool> al_svr_aoeRequiresLoS;
-
-		/*
-		public static Sprite GuardianSprite;
-		public static Sprite BerserkerSprite;
-		public static Sprite RangerIcon;
-		public static Sprite MageSprite;
-		public static Sprite DruidSprite;
-
-		public static Sprite RiposteIcon;
-		public static Sprite WeakenIcon;*/
 
 		public static Sprite[] Ability_Sprites = new Sprite[4];
 		public static string[] Ability_Names = new string[4];
@@ -171,40 +163,21 @@ namespace AsgardLegacy
 			Configs_Guardian.InitializeConfig(Config);
 			Configs_Berserker.InitializeConfig(Config);
 
-			Utility.ModID = "valheim.vrakhen.tribesofvalheim";
+			Utility.ModID = "valheim.vrakhen.asgardlegacy";
 			Utility.Folder = Path.GetDirectoryName(Info.Location);
-			ZLog.Log("Tribes of Valheims attempting to find tvAssets in the directory with " + Info.Location);
+			ZLog.Log("AsgardLegacy attempting to find assets in the directory with " + Info.Location);
 
-			/*
-			var texture = Utility.LoadTextureFromAssets("classLevel.png");
-			var classIcon = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+			var classIcon = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/reee.png");
+			Ability_Sprites[0] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var1.png");
+			Ability_Sprites[1] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var2.png");
+			Ability_Sprites[2] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var3.png");
+			Ability_Sprites[3] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var4.png");
+			Jotunn.Logger.LogInfo(classIcon.name);
 
-			texture = Utility.LoadTextureFromAssets("ability1.png");
-			Ability_Sprites[0] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			texture = Utility.LoadTextureFromAssets("ability2.png");
-			Ability_Sprites[1] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			texture = Utility.LoadTextureFromAssets("ability3.png");
-			Ability_Sprites[2] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			texture = Utility.LoadTextureFromAssets("ability4.png");
-			Ability_Sprites[3] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+			runeTableAssets = AssetUtils.LoadAssetBundle(Utility.Folder + "/Assets/al_runetable");
 
-			texture = Utility.LoadTextureFromAssets("guardian.png");
-			Ability_Sprites[0] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			texture = Utility.LoadTextureFromAssets("berserker.png");
-			Ability_Sprites[0] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			texture = Utility.LoadTextureFromAssets("ranger.png");
-			Ability_Sprites[0] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			texture = Utility.LoadTextureFromAssets("mage.png");
-			Ability_Sprites[0] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			texture = Utility.LoadTextureFromAssets("druid.png");
-			Ability_Sprites[0] = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f));
-			*/
-
-			var classIcon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/reee.png");
-			Ability_Sprites[0] = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var1.png");
-			Ability_Sprites[1] = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var2.png");
-			Ability_Sprites[2] = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var3.png");
-			Ability_Sprites[3] = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var4.png");
+			RuneTableController.AddRuneTablePiece();
+			RuneTableController.AddRuneTableRecipes();
 
 			Utility.SetTimer();
 			ClassLevelSkillDef = new Skills.SkillDef
@@ -214,7 +187,7 @@ namespace AsgardLegacy
 				m_description = "Your class level",
 				m_increseStep = 1f
 			};
-			_Harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "valheim.vrakhen.tribesofvalheim");
+			_Harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), "valheim.vrakhen.asgardlegacy");
 		}
 		
 		private void OnDestroy()
@@ -278,7 +251,7 @@ namespace AsgardLegacy
 			switch (al_player.al_class)
 			{
 				case PlayerClass.Guardian:
-					ZLog.Log("Tribes of Valheim : Guardian");
+					ZLog.Log("Asgard Legacy : Guardian");
 					Ability_Names[0] = "Shatter Fall";
 					Ability_Names[1] = "Aegis";
 					Ability_Names[2] = "Ice Crush";
@@ -286,7 +259,7 @@ namespace AsgardLegacy
 					Player.m_localPlayer.ShowTutorial("al_Guardian");
 					break;
 				case PlayerClass.Berserker:
-					ZLog.Log("Tribes of Valheim : Berserker");
+					ZLog.Log("Asgard Legacy : Berserker");
 					Ability_Names[0] = "Ability 1";
 					Ability_Names[1] = "Ability 2";
 					Ability_Names[2] = "Ability 3";
@@ -294,7 +267,7 @@ namespace AsgardLegacy
 					Player.m_localPlayer.ShowTutorial("al_Berserker");
 					break;
 				case PlayerClass.Ranger:
-					ZLog.Log("Tribes of Valheim : Ranger");
+					ZLog.Log("Asgard Legacy : Ranger");
 					Ability_Names[0] = "Explosive Arrow";
 					Ability_Names[1] = "Rapid Fire";
 					Ability_Names[2] = "Shadow Stalk";
@@ -302,7 +275,7 @@ namespace AsgardLegacy
 					Player.m_localPlayer.ShowTutorial("al_Ranger");
 					break;
 				case PlayerClass.Mage:
-					ZLog.Log("Tribes of Valheim : Mage");
+					ZLog.Log("Asgard Legacy : Mage");
 					Ability_Names[0] = "Ability 1";
 					Ability_Names[1] = "Ability 2";
 					Ability_Names[2] = "Ability 3";
@@ -310,7 +283,7 @@ namespace AsgardLegacy
 					Player.m_localPlayer.ShowTutorial("al_Mage");
 					break;
 				case PlayerClass.Sentinel:
-					ZLog.Log("Tribes of Valheim : Druid");
+					ZLog.Log("Asgard Legacy : Druid");
 					Ability_Names[0] = "Ability 1";
 					Ability_Names[1] = "Ability 2";
 					Ability_Names[2] = "Ability 3";
@@ -318,7 +291,7 @@ namespace AsgardLegacy
 					Player.m_localPlayer.ShowTutorial("al_Druid");
 					break;
 				default:
-					ZLog.Log("Tribes of Valheim: --None--");
+					ZLog.Log("Asgard Legacy: --None--");
 					break;
 			}
 		}
@@ -678,429 +651,6 @@ namespace AsgardLegacy
 				return true;
 			}
 		}
-
-		/*[HarmonyPatch(typeof(Character), "Stagger", null)]
-		public class al_StaggerPrevention_Patch
-		{
-			public static bool Prefix(Character __instance)
-			{
-				bool flag = __instance.GetSEMan().HaveStatusEffect("SE_al_Berserk");
-				return !flag;
-			}
-		}*/
-
-		/*[HarmonyPatch(typeof(Attack), "GetAttackStamina", null)]
-		public class AttackStaminaReduction_Patch
-		{
-			public static void Postfix(Attack __instance, ItemDrop.ItemData ___m_weapon, ref float __result)
-			{
-				bool flag = ___m_weapon != null && al_player != null && al_player.al_class == PlayerClass.Berserker && ___m_weapon.m_shared.m_itemType == 14;
-				if (flag)
-				{
-					__result *= 0.7f * GlobalConfigs.c_berserkerBonus2h;
-				}
-			}
-		}*/
-
-		[HarmonyPatch(typeof(Character), "Damage", null)]
-		public class al_Damage_Patch
-		{
-			public static bool Prefix(Character __instance, ref HitData hit, float ___m_maxAirAltitude)
-			{
-				var attacker = hit.GetAttacker();
-				bool flag = __instance == Player.m_localPlayer;
-				/*if (flag)
-				{
-					bool inFlight = Guardian.inFlight;
-					if (inFlight)
-					{
-						Guardian.inFlight = false;
-						return false;
-					}
-				}*/
-
-				if (attacker == null)
-					return true;
-				
-				/*
-				bool flag3 = attacker != null;
-				if (flag3)
-				{
-					bool flag4 = __instance.m_name == "Shadow Wolf" && !BaseAI.IsEnemy(__instance, attacker);
-					if (flag4)
-					{
-						hit.m_damage.Modify(0.1f);
-					}
-					Player player = attacker as Player;
-					bool flag5 = attacker.GetSEMan().HaveStatusEffect("SE_al_Weaken");
-					if (flag5)
-					{
-						SE_Weaken se_Weaken = (SE_Weaken) attacker.GetSEMan().GetStatusEffect("SE_al_Weaken");
-						hit.m_damage.Modify(1f - se_Weaken.damageReduction);
-					}
-					bool flag6 = attacker.GetSEMan().HaveStatusEffect("SE_al_ShadowStalk");
-					if (flag6)
-					{
-						attacker.GetSEMan().RemoveStatusEffect("SE_al_ShadowStalk", true);
-					}
-					bool flag7 = attacker.GetSEMan().HaveStatusEffect("SE_al_Rogue");
-					if (flag7)
-					{
-						bool playerUsingDaggerOnly = Class_Rogue.PlayerUsingDaggerOnly;
-						if (playerUsingDaggerOnly)
-						{
-							hit.m_damage.Modify(1.25f);
-						}
-					}
-					bool flag8 = attacker.GetSEMan().HaveStatusEffect("SE_al_Monk");
-					if (flag8)
-					{
-						SE_Monk se_Monk = (SE_Monk) attacker.GetSEMan().GetStatusEffect("SE_al_Monk");
-						bool flag9 = Class_Monk.PlayerIsUnarmed && hit.m_damage.m_blunt > 0f;
-						if (flag9)
-						{
-							HitData hitData = hit;
-							hitData.m_damage.m_blunt = hitData.m_damage.m_blunt * 1.25f;
-							se_Monk.hitCount++;
-						}
-					}
-					bool flag10 = attacker.GetSEMan().HaveStatusEffect("SE_al_Shell");
-					if (flag10)
-					{
-						SE_Shell se_Shell = attacker.GetSEMan().GetStatusEffect("SE_al_Shell") as SE_Shell;
-						HitData hitData2 = hit;
-						hitData2.m_damage.m_spirit = hitData2.m_damage.m_spirit + se_Shell.spiritDamageOffset;
-					}
-					bool flag11 = attacker.GetSEMan().HaveStatusEffect("SE_al_BiomeMist");
-					if (flag11)
-					{
-						SE_BiomeMist se_BiomeMist = attacker.GetSEMan().GetStatusEffect("SE_al_BiomeMist") as SE_BiomeMist;
-						HitData hitData3 = hit;
-						hitData3.m_damage.m_frost = hitData3.m_damage.m_frost + se_BiomeMist.iceDamageOffset;
-					}
-					bool flag12 = attacker.GetSEMan().HaveStatusEffect("SE_al_BiomeAsh");
-					if (flag12)
-					{
-						SE_BiomeAsh se_BiomeAsh = attacker.GetSEMan().GetStatusEffect("SE_al_BiomeAsh") as SE_BiomeAsh;
-						HitData hitData4 = hit;
-						hitData4.m_damage.m_fire = hitData4.m_damage.m_fire + se_BiomeAsh.fireDamageOffset;
-					}
-					bool flag13 = attacker.GetSEMan().HaveStatusEffect("SE_al_Berserk");
-					if (flag13)
-					{
-						SE_Berserk se_Berserk = attacker.GetSEMan().GetStatusEffect("SE_al_Berserk") as SE_Berserk;
-						attacker.AddStamina(hit.GetTotalDamage() * se_Berserk.healthAbsorbPercent);
-					}
-					bool flag14 = attacker.GetSEMan().HaveStatusEffect("SE_al_Execute");
-					if (flag14)
-					{
-						SE_Execute se_Execute = attacker.GetSEMan().GetStatusEffect("SE_al_Execute") as SE_Execute;
-						hit.m_staggerMultiplier *= se_Execute.staggerForce;
-						HitData hitData5 = hit;
-						hitData5.m_damage.m_blunt = hitData5.m_damage.m_blunt * se_Execute.damageBonus;
-						HitData hitData6 = hit;
-						hitData6.m_damage.m_pierce = hitData6.m_damage.m_pierce * se_Execute.damageBonus;
-						HitData hitData7 = hit;
-						hitData7.m_damage.m_slash = hitData7.m_damage.m_slash * se_Execute.damageBonus;
-						se_Execute.hitCount--;
-						bool flag15 = se_Execute.hitCount <= 0;
-						if (flag15)
-						{
-							attacker.GetSEMan().RemoveStatusEffect(se_Execute, true);
-						}
-					}
-					bool flag16 = attacker.GetSEMan().HaveStatusEffect("SE_al_Companion");
-					if (flag16)
-					{
-						SE_Companion se_Companion = attacker.GetSEMan().GetStatusEffect("SE_al_Companion") as SE_Companion;
-						hit.m_damage.Modify(se_Companion.damageModifier);
-					}
-					bool flag17 = attacker.GetSEMan().HaveStatusEffect("SE_al_RootsBuff");
-					if (flag17)
-					{
-						SE_RootsBuff se_RootsBuff = attacker.GetSEMan().GetStatusEffect("SE_al_RootsBuff") as SE_RootsBuff;
-						hit.m_damage.Modify(se_RootsBuff.damageModifier);
-					}
-					bool flag18 = al_player != null && player != null && al_player.al_name == player.GetPlayerName();
-					if (flag18)
-					{
-						bool flag19 = al_player.al_class == PlayerClass.Berserker;
-						if (flag19)
-						{
-							hit.m_damage.Modify(1f + (1f - attacker.GetHealthPercentage()) * 0.4f * GlobalConfigs.c_berserkerBonusDamage);
-						}
-						else
-						{
-							bool flag20 = al_player.al_class == PlayerClass.Enchanter;
-							if (flag20)
-							{
-								bool flag21 = Random.value > 0.3f;
-								if (flag21)
-								{
-									float level = player.GetSkills().GetSkillList().FirstOrDefault((Skills.Skill x) => x.m_info == AlterationSkillDef).m_level;
-									float value = Random.value;
-									bool flag22 = value <= 0.4f;
-									if (flag22)
-									{
-										HitData hitData8 = hit;
-										hitData8.m_damage.m_fire = hitData8.m_damage.m_fire + level * GlobalConfigs.c_enchanterBonusElementalTouch;
-									}
-									else
-									{
-										bool flag23 = value <= 0.6f;
-										if (flag23)
-										{
-											HitData hitData9 = hit;
-											hitData9.m_damage.m_frost = hitData9.m_damage.m_frost + level * GlobalConfigs.c_enchanterBonusElementalTouch;
-										}
-										else
-										{
-											HitData hitData10 = hit;
-											hitData10.m_damage.m_lightning = hitData10.m_damage.m_lightning + level * GlobalConfigs.c_enchanterBonusElementalTouch;
-										}
-									}
-								}
-							}
-						}
-					}
-				}*/
-				return true;
-			}
-		}
-
-		[HarmonyPatch(typeof(Projectile), "OnHit", null)]
-		public class Projectile_Hit_Patch
-		{
-			public static void Postfix(Projectile __instance, Collider collider, Vector3 hitPoint, bool water, float ___m_aoe, int ___m_rayMaskSolids, Character ___m_owner, Vector3 ___m_vel)
-			{
-				/*
-				bool flag = __instance.name == "VL_Charm";
-				if (flag)
-				{
-					bool flag2 = false;
-					bool flag3 = __instance.m_aoe > 0f;
-					if (flag3)
-					{
-						Collider[] array = Physics.OverlapSphere(hitPoint, __instance.m_aoe, ___m_rayMaskSolids, 0);
-						HashSet<GameObject> hashSet = new HashSet<GameObject>();
-						Collider[] array2 = array;
-						foreach (Collider collider2 in array2)
-						{
-							GameObject gameObject = Projectile.FindHitObject(collider2);
-							IDestructible component = gameObject.GetComponent<IDestructible>();
-							bool flag4 = component != null && !hashSet.Contains(gameObject);
-							if (flag4)
-							{
-								hashSet.Add(gameObject);
-								bool flag5 = ValheimLegends.IsValidTarget(component, ref flag2, ___m_owner, __instance.m_dodgeable);
-								if (flag5)
-								{
-									Character character = null;
-									gameObject.TryGetComponent<Character>(ref character);
-									bool flag6 = character != null;
-									bool flag7 = character == null;
-									if (flag7)
-									{
-										character = (Character) gameObject.GetComponentInParent(typeof(Character));
-										flag6 = (character != null);
-									}
-									bool flag8 = flag6 && !character.IsPlayer() && ___m_owner is Player && !character.m_boss;
-									if (flag8)
-									{
-										Player player = ___m_owner as Player;
-										SE_Charm se_Charm = (SE_Charm) ScriptableObject.CreateInstance(typeof(SE_Charm));
-										se_Charm.m_ttl = SE_Charm.m_baseTTL * VL_GlobalConfigs.c_enchanterCharm;
-										se_Charm.summoner = player;
-										se_Charm.originalFaction = character.m_faction;
-										character.m_faction = player.GetFaction();
-										Object.Instantiate<GameObject>(ZNetScene.instance.GetPrefab("fx_boar_pet"), character.GetEyePoint(), Quaternion.identity);
-										character.GetSEMan().AddStatusEffect(se_Charm, false);
-									}
-								}
-							}
-						}
-					}
-				}
-				else
-				{
-					bool flag9 = __instance.name == "VL_ValkyrieSpear";
-					if (flag9)
-					{
-						bool flag10 = false;
-						bool flag11 = __instance.m_aoe > 0f;
-						if (flag11)
-						{
-							Collider[] array4 = Physics.OverlapSphere(hitPoint, __instance.m_aoe, ___m_rayMaskSolids, 0);
-							HashSet<GameObject> hashSet2 = new HashSet<GameObject>();
-							Collider[] array5 = array4;
-							foreach (Collider collider3 in array5)
-							{
-								GameObject gameObject2 = Projectile.FindHitObject(collider3);
-								IDestructible component2 = gameObject2.GetComponent<IDestructible>();
-								bool flag12 = component2 != null && !hashSet2.Contains(gameObject2);
-								if (flag12)
-								{
-									hashSet2.Add(gameObject2);
-									bool flag13 = ValheimLegends.IsValidTarget(component2, ref flag10, ___m_owner, __instance.m_dodgeable);
-									if (flag13)
-									{
-										Character character2 = null;
-										gameObject2.TryGetComponent<Character>(ref character2);
-										bool flag14 = character2 != null;
-										bool flag15 = character2 == null;
-										if (flag15)
-										{
-											character2 = (Character) gameObject2.GetComponentInParent(typeof(Character));
-											flag14 = (character2 != null);
-										}
-										bool flag16 = flag14 && !character2.IsPlayer() && ___m_owner is Player && !character2.m_boss;
-										if (flag16)
-										{
-											Player player2 = ___m_owner as Player;
-											Vector3 vector = character2.transform.position - player2.transform.position;
-											float magnitude = vector.magnitude;
-											float num = character2.GetMass() * 0.05f;
-											Vector3 vector2;
-											vector2..ctor(0f, 4f / num, 0f);
-											character2.Stagger(vector);
-											Object.Instantiate<GameObject>(ZNetScene.instance.GetPrefab("fx_VL_ParticleLightburst"), character2.transform.position, Quaternion.LookRotation(new Vector3(0f, 1f, 0f)));
-											Traverse.Create(character2).Field("m_pushForce").SetValue(vector2);
-										}
-									}
-								}
-							}
-						}
-					}
-				}*/
-			}
-		}
-
-
-		/*[HarmonyPatch(typeof(Attack), "DoMeleeAttack", null)]
-		public class MeleeAttack_Patch
-		{
-			public static bool Prefix(Attack __instance, Humanoid ___m_character, ref float ___m_damageMultiplier)
-			{
-				bool flag = ___m_character.GetSEMan().HaveStatusEffect("SE_al_Berserk");
-				if (flag)
-				{
-					SE_Berserk se_Berserk = (SE_Berserk) ___m_character.GetSEMan().GetStatusEffect("SE_al_Berserk");
-					___m_damageMultiplier *= se_Berserk.damageModifier;
-				}
-				return true;
-			}
-		}*/
-
-		[HarmonyPatch(typeof(ItemDrop.ItemData), "GetBaseBlockPower", new Type[] { typeof(int) })]
-		public class BaseBlockPower_Bulwark_Patch
-		{
-			public static void Postfix(ItemDrop.ItemData __instance, ref float __result)
-			{
-				if (Guardian.isBlocking)
-					__result += 20f;
-			}
-		}
-
-		/*[HarmonyPatch(typeof(Character), "CheckDeath")]
-		public class OnDeath_Patch
-		{
-			public static bool Prefix(Character __instance)
-			{
-				bool flag = !__instance.IsDead() && __instance.GetHealth() <= 0f && al_player != null;
-				if (flag)
-				{
-					Player player = __instance as Player;
-					bool flag2 = player != null && al_player.al_class == PlayerClass.Priest && player.GetPlayerName() == al_player.al_name;
-					if (flag2)
-					{
-						bool flag3 = !__instance.GetSEMan().HaveStatusEffect("SE_al_DyingLight_CD");
-						if (flag3)
-						{
-							StatusEffect statusEffect = (SE_DyingLight_CD) ScriptableObject.CreateInstance(typeof(SE_DyingLight_CD));
-							statusEffect.m_ttl = 600f * GlobalConfigs.c_priestBonusDyingLightCooldown;
-							__instance.GetSEMan().AddStatusEffect(statusEffect, false);
-							__instance.SetHealth(1f);
-							return false;
-						}
-					}
-					else
-					{
-						bool flag4 = al_player.al_class == PlayerClass.Shaman;
-						if (flag4)
-						{
-							Player localPlayer = Player.m_localPlayer;
-							bool flag5 = localPlayer != null && al_player.al_name == localPlayer.GetPlayerName() && Vector3.Distance(localPlayer.transform.position, __instance.transform.position) <= 10f;
-							if (flag5)
-							{
-                                Instantiate(ZNetScene.instance.GetPrefab("fx_al_AbsorbSpirit"), localPlayer.GetCenterPoint(), Quaternion.identity);
-								localPlayer.AddStamina(25f * GlobalConfigs.c_shamanBonusSpiritGuide);
-							}
-						}
-					}
-				}
-				return true;
-			}
-		}*/
-
-		/*[HarmonyPatch(typeof(HitData), "BlockDamage")]
-		public static class BlockDamage_Patch
-		{
-			public static bool Prefix(HitData __instance, float damage, HitData.DamageTypes ___m_damage)
-			{
-				bool flag = al_player != null;
-				if (flag)
-				{
-					bool flag2 = al_player.al_class == PlayerClass.Monk && Class_Monk.PlayerIsUnarmed;
-					if (flag2)
-					{
-						bool flag3 = __instance.GetTotalBlockableDamage() >= damage;
-						if (flag3)
-						{
-							SE_Monk se_Monk = (SE_Monk) Player.m_localPlayer.GetSEMan().GetStatusEffect("SE_al_Monk");
-							se_Monk.hitCount++;
-						}
-					}
-					else
-					{
-						bool flag4 = al_player.al_class == PlayerClass.Valkyrie && Class_Valkyrie.PlayerUsingShield;
-						if (flag4)
-						{
-							bool flag5 = __instance.GetTotalBlockableDamage() >= damage;
-							if (flag5)
-							{
-								SE_Valkyrie se_Valkyrie = (SE_Valkyrie) Player.m_localPlayer.GetSEMan().GetStatusEffect("SE_al_Valkyrie");
-								se_Valkyrie.hitCount++;
-							}
-						}
-						else
-						{
-							bool flag6 = al_player.al_class == PlayerClass.Enchanter;
-							if (flag6)
-							{
-								float totalBlockableDamage = __instance.GetTotalBlockableDamage();
-								float num = damage / totalBlockableDamage;
-								bool flag7 = num > 0f;
-								if (flag7)
-								{
-									float num2 = ___m_damage.m_fire * num;
-									float num3 = ___m_damage.m_frost * num;
-									float num4 = ___m_damage.m_lightning * num;
-									float num5 = num2 + num3 + num4;
-									bool flag8 = num5 > 0f;
-									if (flag8)
-									{
-										Player.m_localPlayer.AddStamina(num5 * GlobalConfigs.c_enchanterBonusElementalBlock);
-										Player.m_localPlayer.RaiseSkill(AbjurationSkill, num);
-                                        Instantiate(ZNetScene.instance.GetPrefab("vfx_Potion_stamina_medium"), Player.m_localPlayer.transform.position, Quaternion.identity);
-									}
-								}
-							}
-						}
-					}
-				}
-				return true;
-			}
-		}*/
 
 		[HarmonyPatch(typeof(Skills), "GetSkillDef")]
 		public static class GetSkillDef_Patch
