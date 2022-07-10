@@ -24,20 +24,20 @@ namespace AsgardLegacy
 			{
 				if (!player.GetSEMan().HaveStatusEffect("SE_Ability2_CD"))
 				{
-					if (player.HaveStamina(GlobalConfigs_Ranger.al_svr_ranger_rapidFire_staminaCost - 1f))
-						ActivateRapidFire(currentLevel);
+					if (player.HaveStamina(GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_staminaCost - 1f))
+						ActivateShadowStalk(currentLevel);
 					else
-						Utility.SendNotEnoughStaminaMessage(player, SE_Ranger_RapidFire.m_baseName, GlobalConfigs_Ranger.al_svr_ranger_rapidFire_staminaCost);
+						Utility.SendNotEnoughStaminaMessage(player, SE_Ranger_ShadowStalk.m_baseName, GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_staminaCost);
 				}
 			}
 			else if (Utility.Ability3_Input_Down && currentLevel >= GlobalConfigs.al_svr_ability3UnlockLevel)
 			{
 				if (!player.GetSEMan().HaveStatusEffect("SE_Ability3_CD"))
 				{
-					if (player.HaveStamina(GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_staminaCost - 1f))
-						ActivateShadowStalk(currentLevel);
+					if (player.HaveStamina(GlobalConfigs_Ranger.al_svr_ranger_rapidFire_staminaCost - 1f))
+						ActivateRapidFire(currentLevel);
 					else
-						Utility.SendNotEnoughStaminaMessage(player, SE_Ranger_ShadowStalk.m_baseName, GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_staminaCost);
+						Utility.SendNotEnoughStaminaMessage(player, SE_Ranger_RapidFire.m_baseName, GlobalConfigs_Ranger.al_svr_ranger_rapidFire_staminaCost);
 				}
 			}
 			else if (Utility.Ability4_Input_Down && currentLevel >= GlobalConfigs.al_svr_ability4UnlockLevel)
@@ -50,8 +50,6 @@ namespace AsgardLegacy
 						Utility.SendNotEnoughStaminaMessage(player, SE_Ranger_RangerMark.m_baseName, GlobalConfigs_Ranger.al_svr_ranger_rangerMark_staminaCost);
 				}
 			}
-			else if (Input.GetKeyDown(KeyCode.PageUp))
-				player.RaiseSkill(AsgardLegacy.ClassLevelSkill);
 		}
 
 		private static void ActivateExplosiveArrow()
@@ -69,35 +67,13 @@ namespace AsgardLegacy
 			player.UseStamina(GlobalConfigs_Ranger.al_svr_ranger_explosiveArrow_staminaCost);
 		}
 
-		private static void ActivateRapidFire(int currentLevel)
-		{
-			var player = Player.m_localPlayer;
-
-			var se_Ability2_CD = (SE_Ability2_CD) ScriptableObject.CreateInstance(typeof(SE_Ability2_CD));
-			se_Ability2_CD.m_ttl = GlobalConfigs_Ranger.al_svr_ranger_rapidFire_cooldown;
-			player.GetSEMan().AddStatusEffect(se_Ability2_CD, true);
-
-			var se_RangerRapidFire = (SE_Ranger_RapidFire) ScriptableObject.CreateInstance(typeof(SE_Ranger_RapidFire));
-			se_RangerRapidFire.m_ttl = Utility.GetLinearValue(
-				currentLevel,
-				GlobalConfigs_Ranger.al_svr_ranger_rapidFire_durationMin,
-				GlobalConfigs_Ranger.al_svr_ranger_rapidFire_durationMax,
-				GlobalConfigs.al_svr_ability2UnlockLevel);
-			player.GetSEMan().AddStatusEffect(se_RangerRapidFire, false);
-
-			Object.Instantiate(ZNetScene.instance.GetPrefab("fx_guardstone_deactivate"), player.GetCenterPoint(), Quaternion.identity);
-			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_metal_blocked"), player.transform.position, Quaternion.identity);
-
-			player.UseStamina(GlobalConfigs_Ranger.al_svr_ranger_rapidFire_staminaCost);
-		}
-		
 		private static void ActivateShadowStalk(int currentLevel)
 		{
 			var player = Player.m_localPlayer;
 
-			var se_Ability3_CD = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
-			se_Ability3_CD.m_ttl = GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_cooldown;
-			player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
+			var se_Ability2_CD = (SE_Ability2_CD) ScriptableObject.CreateInstance(typeof(SE_Ability2_CD));
+			se_Ability2_CD.m_ttl = GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability2_CD, true);
 
 			Object.Instantiate(ZNetScene.instance.GetPrefab("vfx_odin_despawn"), player.transform.position, Quaternion.identity);
 			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_wraith_death"), player.transform.position, Quaternion.identity);
@@ -107,22 +83,22 @@ namespace AsgardLegacy
 				currentLevel,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_durationMin,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_durationMax,
-				GlobalConfigs.al_svr_ability3UnlockLevel);
+				GlobalConfigs.al_svr_ability2UnlockLevel);
 			se_Ranger_ShadowStalk.crouchSpeedAmount = Utility.GetLinearValue(
 				currentLevel,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_crouchSpeedMultiplierMin,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_crouchSpeedMultiplierMax,
-				GlobalConfigs.al_svr_ability3UnlockLevel);
+				GlobalConfigs.al_svr_ability2UnlockLevel);
 			se_Ranger_ShadowStalk.speedAmount = Utility.GetLinearValue(
 				currentLevel,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_speedMultiplierMin,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_speedMultiplierMax,
-				GlobalConfigs.al_svr_ability3UnlockLevel);
+				GlobalConfigs.al_svr_ability2UnlockLevel);
 			se_Ranger_ShadowStalk.speedDuration = Utility.GetLinearValue(
 				currentLevel,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_speedDurationMin,
 				GlobalConfigs_Ranger.al_svr_ranger_shadowStalk_speedDurationMax,
-				GlobalConfigs.al_svr_ability3UnlockLevel);
+				GlobalConfigs.al_svr_ability2UnlockLevel);
 			player.GetSEMan().AddStatusEffect(se_Ranger_ShadowStalk, false);
 
 			var characters = new List<Character>();
@@ -145,7 +121,29 @@ namespace AsgardLegacy
 
 			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainBuffCast);
 		}
-		
+
+		private static void ActivateRapidFire(int currentLevel)
+		{
+			var player = Player.m_localPlayer;
+
+			var se_Ability3_CD = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
+			se_Ability3_CD.m_ttl = GlobalConfigs_Ranger.al_svr_ranger_rapidFire_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
+
+			var se_RangerRapidFire = (SE_Ranger_RapidFire) ScriptableObject.CreateInstance(typeof(SE_Ranger_RapidFire));
+			se_RangerRapidFire.m_ttl = Utility.GetLinearValue(
+				currentLevel,
+				GlobalConfigs_Ranger.al_svr_ranger_rapidFire_durationMin,
+				GlobalConfigs_Ranger.al_svr_ranger_rapidFire_durationMax,
+				GlobalConfigs.al_svr_ability3UnlockLevel);
+			player.GetSEMan().AddStatusEffect(se_RangerRapidFire, false);
+
+			Object.Instantiate(ZNetScene.instance.GetPrefab("fx_guardstone_deactivate"), player.GetCenterPoint(), Quaternion.identity);
+			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_metal_blocked"), player.transform.position, Quaternion.identity);
+
+			player.UseStamina(GlobalConfigs_Ranger.al_svr_ranger_rapidFire_staminaCost);
+		}
+
 		private static void ActivateRangerMark(int currentLevel)
 		{
 			var player = Player.m_localPlayer;
@@ -187,19 +185,20 @@ namespace AsgardLegacy
 
 				nbHits++;
 				var hitData = new HitData();
-				hitData.m_damage.m_blunt = projectileDamage.m_pierce
-					* Utility.GetLinearValue(currentLevel, 
-						GlobalConfigs_Ranger.al_svr_ranger_explosiveArrow_damageMin, 
-						GlobalConfigs_Ranger.al_svr_ranger_explosiveArrow_damageMax, 
-						GlobalConfigs.al_svr_ability1UnlockLevel);
+				hitData.m_damage.m_blunt = projectileDamage.m_pierce;
 				hitData.m_damage.m_fire = projectileDamage.m_fire;
 				hitData.m_damage.m_frost = projectileDamage.m_frost;
 				hitData.m_damage.m_lightning = projectileDamage.m_lightning;
 				hitData.m_damage.m_poison = projectileDamage.m_poison;
+
+				hitData.m_damage.Modify(Utility.GetLinearValue(currentLevel,
+						GlobalConfigs_Ranger.al_svr_ranger_explosiveArrow_damageMin,
+						GlobalConfigs_Ranger.al_svr_ranger_explosiveArrow_damageMax,
+						GlobalConfigs.al_svr_ability1UnlockLevel));
+
 				hitData.m_pushForce = GlobalConfigs_Ranger.al_svr_ranger_explosiveArrow_pushForce;
 				hitData.m_point = character.GetEyePoint();
 				hitData.m_dir = character.transform.position - player.transform.position;
-				hitData.m_skill = AsgardLegacy.ClassLevelSkill;
 
 				character.Damage(hitData);
 			}

@@ -54,21 +54,20 @@ namespace AsgardLegacy
 
 		public static Sprite[] Ability_Sprites = new Sprite[4];
 		public static string[] Ability_Names = new string[4];
+		public static string[] Passive_Names = new string[6];
 		public static string[] Ability_Descriptions = new string[4];
 
-		public static List<RectTransform> abilitiesStatus = new List<RectTransform>();
-		public static bool shouldUseForsakenPower = false;
 		public static bool isChanneling = false;
-		public static int channelingCancelDelay = 0;
-		public static bool isChargingDash = false;
-		public static int dashCounter = 0;
-		public static int logCheck = 0;
-		public static int animationCountdown = 0;
+		public static bool shouldUseForsakenPower = false;
+
+		public static List<RectTransform> abilitiesStatus = new List<RectTransform>();
 
 		public static readonly int ClassLevelSkillID = 781;
 		public static Skills.SkillType ClassLevelSkill = (Skills.SkillType) ClassLevelSkillID;
 		public static Skills.SkillDef ClassLevelSkillDef;
 		public static string ClassLevelSkillName = "ClassLevel";
+
+		public static Type ShaderReplacer;
 
 		public class al_Player
 		{
@@ -82,7 +81,6 @@ namespace AsgardLegacy
 			Guardian,
 			Berserker,
 			Ranger,
-			Mage,
 			Sentinel
 		}
 
@@ -98,10 +96,8 @@ namespace AsgardLegacy
 						return 2;
 					case PlayerClass.Ranger:
 						return 3;
-					case PlayerClass.Mage:
-						return 4;
 					case PlayerClass.Sentinel:
-						return 5;
+						return 4;
 					default:
 						return 0;
 				}
@@ -133,10 +129,16 @@ namespace AsgardLegacy
 
 		private void Awake()
 		{
+			Utility.ModID = "valheim.vrakhen.asgardlegacy";
+			Utility.Folder = Path.GetDirectoryName(Info.Location);
+			ZLog.Log("AsgardLegacy attempting to find assets in the directory with " + Info.Location);
+
+			runeTableAssets = AssetUtils.LoadAssetBundle(Utility.Folder + "/Assets/al_runetable");
+
 			chosenClass = Config.Bind("General", "chosenClass", "None", "Assigns a class to the player if no class is assigned.\nThis will not overwrite an existing class selection.\nA value of None will not attempt to assign any class.");
 			al_svr_allowAltarClassChange = Config.Bind("General", "al_svr_allowAltarClassChange", true, "Allows class changing at the altar; if disabled, the only way to change class will be via console or the mod configs.");
 			al_svr_enforceConfigClass = Config.Bind("General", "al_svr_enforceConfigClass", false, "True - always sets the player class to this value when the player logs in. False - uses player profile to determine class\nDoes not apply if the chosen class is None.");
-			al_svr_aoeRequiresLoS = Config.Bind("General", "al_svr_aoeRequiresLoS", true, "True - all AoE attacks require Line of Sight to the impact point.\nFalse - uses default game behavior for AoE attacks.");
+			al_svr_aoeRequiresLoS = Config.Bind("General", "al_svr_aoeRequiresLoS", false, "True - all AoE attacks require Line of Sight to the impact point.\nFalse - uses default game behavior for AoE attacks.");
 
 			showAbilityIcons = Config.Bind("Display", "showAbilityIcons", true, "Displays Icons on Hud for each ability");
 			iconAlignment = Config.Bind("Display", "iconAlignment", "horizontal", "Aligns icons horizontally or vertically off the guardian power icon; options are horizontal or vertical");
@@ -159,25 +161,34 @@ namespace AsgardLegacy
 			GlobalConfigs.ConfigStrings.Add("al_svr_allowAltarClassChange", al_svr_allowAltarClassChange.Value ? 1 : 0);
 
 			GlobalConfigs_Ranger.ConfigStrings.Clear();
+			GlobalConfigs_Guardian.ConfigStrings.Clear();
+			GlobalConfigs_Berserker.ConfigStrings.Clear();
+			GlobalConfigs_Sentinel.ConfigStrings.Clear();
+
 			Configs_Ranger.InitializeConfig(Config);
 			Configs_Guardian.InitializeConfig(Config);
 			Configs_Berserker.InitializeConfig(Config);
+			Configs_Sentinel.InitializeConfig(Config);
 
-			Utility.ModID = "valheim.vrakhen.asgardlegacy";
-			Utility.Folder = Path.GetDirectoryName(Info.Location);
-			ZLog.Log("AsgardLegacy attempting to find assets in the directory with " + Info.Location);
-
-			var classIcon = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/reee.png");
-			Ability_Sprites[0] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var1.png");
-			Ability_Sprites[1] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var2.png");
-			Ability_Sprites[2] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var3.png");
-			Ability_Sprites[3] = AssetUtils.LoadSpriteFromFile("D:/Modding/AsgardLegacy/AsgardLegacy/Assets/test_var4.png");
+			var classIcon = runeTableAssets.LoadAsset<Sprite>("AL_class_icon");
+			Ability_Sprites[0] = runeTableAssets.LoadAsset<Sprite>("AL_rune_stone_ice_icon");
+			Ability_Sprites[1] = runeTableAssets.LoadAsset<Sprite>("AL_rune_stone_lightning_icon");
+			Ability_Sprites[2] = runeTableAssets.LoadAsset<Sprite>("AL_rune_stone_poison_icon");
+			Ability_Sprites[3] = runeTableAssets.LoadAsset<Sprite>("AL_rune_stone_fire_icon");
 			Jotunn.Logger.LogInfo(classIcon.name);
 
-			runeTableAssets = AssetUtils.LoadAssetBundle(Utility.Folder + "/Assets/al_runetable");
+			RuneTable.AddRuneTablePiece();
+			RunesController.AddRuneTableRecipes();
 
-			RuneTableController.AddRuneTablePiece();
-			RuneTableController.AddRuneTableRecipes();
+			/*TextAsset txt = runeTableAssets.LoadAsset<TextAsset>("AsgardLegacy") as TextAsset;
+
+			// Load the assembly and get a type (class) from it
+			var assembly = System.Reflection.Assembly.Load(txt.bytes);
+			ShaderReplacer = assembly.GetType("ShaderReplacerBehaviour");
+
+			Debug.Log("AL : " + txt.name);
+			Debug.Log("AL : " + assembly.CodeBase);
+			Debug.Log("AL : " + ShaderReplacer.FullName);*/
 
 			Utility.SetTimer();
 			ClassLevelSkillDef = new Skills.SkillDef
@@ -196,7 +207,7 @@ namespace AsgardLegacy
 				_Harmony.UnpatchSelf();
 		}
 
-		public static void SettvPlayer(Player p)
+		public static void SetALPlayer(Player p)
 		{
 			al_player = new al_Player();
 			foreach (al_Player al_Player in al_playerList)
@@ -220,10 +231,7 @@ namespace AsgardLegacy
 						case "ranger":
 							al_player.al_class = PlayerClass.Ranger;
 							break;
-						case "mage":
-							al_player.al_class = PlayerClass.Mage;
-							break;
-						case "druid":
+						case "sentinel":
 							al_player.al_class = PlayerClass.Sentinel;
 							break;
 					}
@@ -232,7 +240,7 @@ namespace AsgardLegacy
 			}
 		}
 	
-		public static void UpdatetvPlayer(Player p)
+		public static void UpdateALPlayer(Player p)
 		{
 			foreach (al_Player al_Player in al_playerList)
 			{
@@ -242,7 +250,7 @@ namespace AsgardLegacy
 				al_Player.al_class = al_player.al_class;
 				p.GetSkills().ResetSkill(ClassLevelSkill);
 				p.GetSkills().RaiseSkill(ClassLevelSkill);
-				SavetvPlayer_Patch.Postfix(Game.instance.GetPlayerProfile(), Game.instance.GetPlayerProfile().GetFilename(), Game.instance.GetPlayerProfile().GetName());
+				SaveALPlayer_Patch.Postfix(Game.instance.GetPlayerProfile(), Game.instance.GetPlayerProfile().GetFilename(), Game.instance.GetPlayerProfile().GetName());
 			}
 		}
 
@@ -256,39 +264,55 @@ namespace AsgardLegacy
 					Ability_Names[1] = "Aegis";
 					Ability_Names[2] = "Ice Crush";
 					Ability_Names[3] = "Retribution";
+					Passive_Names[0] = "Force of Nature";
+					Passive_Names[1] = "Bulwark";
+					Passive_Names[2] = "War Cry";
+					Passive_Names[3] = "Immovable";
+					Passive_Names[4] = "Absorb Elements";
+					Passive_Names[5] = "Undying Will";
 					Player.m_localPlayer.ShowTutorial("al_Guardian");
 					break;
 				case PlayerClass.Berserker:
 					ZLog.Log("Asgard Legacy : Berserker");
-					Ability_Names[0] = "Ability 1";
-					Ability_Names[1] = "Ability 2";
-					Ability_Names[2] = "Ability 3";
-					Ability_Names[3] = "Ability 4";
+					Ability_Names[0] = "Charge";
+					Ability_Names[1] = "Dreadful Roar";
+					Ability_Names[2] = "Raging Storm";
+					Ability_Names[3] = "Frenzy";
+					Passive_Names[0] = "Two-handed Expert";
+					Passive_Names[1] = "Reckless";
+					Passive_Names[2] = "Siphon Life";
+					Passive_Names[3] = "Adrenaline Rush";
+					Passive_Names[4] = "Rebuke";
+					Passive_Names[5] = "Deny Pain";
 					Player.m_localPlayer.ShowTutorial("al_Berserker");
 					break;
 				case PlayerClass.Ranger:
 					ZLog.Log("Asgard Legacy : Ranger");
 					Ability_Names[0] = "Explosive Arrow";
-					Ability_Names[1] = "Rapid Fire";
-					Ability_Names[2] = "Shadow Stalk";
+					Ability_Names[1] = "Shadow Stalk";
+					Ability_Names[2] = "Rapid Fire";
 					Ability_Names[3] = "Ranger Mark";
+					Passive_Names[0] = "Bow Specialist";
+					Passive_Names[1] = "Longstrider";
+					Passive_Names[2] = "Speed Burst";
+					Passive_Names[3] = "Go For The Eyes";
+					Passive_Names[4] = "Elemental Touch";
+					Passive_Names[5] = "Ammo Saver";
 					Player.m_localPlayer.ShowTutorial("al_Ranger");
 					break;
-				case PlayerClass.Mage:
-					ZLog.Log("Asgard Legacy : Mage");
-					Ability_Names[0] = "Ability 1";
-					Ability_Names[1] = "Ability 2";
-					Ability_Names[2] = "Ability 3";
-					Ability_Names[3] = "Ability 4";
-					Player.m_localPlayer.ShowTutorial("al_Mage");
-					break;
 				case PlayerClass.Sentinel:
-					ZLog.Log("Asgard Legacy : Druid");
-					Ability_Names[0] = "Ability 1";
-					Ability_Names[1] = "Ability 2";
-					Ability_Names[2] = "Ability 3";
-					Ability_Names[3] = "Ability 4";
-					Player.m_localPlayer.ShowTutorial("al_Druid");
+					ZLog.Log("Asgard Legacy : Sentinel");
+					Ability_Names[0] = "Rejuvenating Strike";
+					Ability_Names[1] = "Mending Spirits";
+					Ability_Names[2] = "Chains of Light";
+					Ability_Names[3] = "Purging Flames";
+					Passive_Names[0] = "One-handed Master";
+					Passive_Names[1] = "Dwarven Fortitude";
+					Passive_Names[2] = "Healer's Gift";
+					Passive_Names[3] = "Cleansing Roll";
+					Passive_Names[4] = "Vengeful Wave";
+					Passive_Names[5] = "Powerful Build";
+					Player.m_localPlayer.ShowTutorial("al_Sentinel");
 					break;
 				default:
 					ZLog.Log("Asgard Legacy: --None--");
@@ -298,7 +322,7 @@ namespace AsgardLegacy
 
 		[HarmonyPatch(typeof(ZNet), "Awake")]
 		[HarmonyPriority(2147483647)]
-		public static class ZNet_al_Register
+		public static class ZNet_AL_Register
 		{
 			public static void Postfix(ZNet __instance, ZRoutedRpc ___m_routedRpc)
 			{
@@ -325,7 +349,7 @@ namespace AsgardLegacy
 		}
 
 		[HarmonyPatch(typeof(PlayerProfile), "SavePlayerToDisk", null)]
-		public static class SavetvPlayer_Patch
+		public static class SaveALPlayer_Patch
 		{
 			public static void Postfix(PlayerProfile __instance, string ___m_filename, string ___m_playerName)
 			{
@@ -359,7 +383,7 @@ namespace AsgardLegacy
 		}
 
 		[HarmonyPatch(typeof(PlayerProfile), "LoadPlayerFromDisk", null)]
-		public class LoadtvPlayer_Patch
+		public class LoadALPlayer_Patch
 		{
 			public static void Postfix(PlayerProfile __instance, string ___m_filename, string ___m_playerName)
 			{
@@ -388,7 +412,7 @@ namespace AsgardLegacy
 
 			private static ZPackage LoadPlayerDataFromDisk(string m_filename)
 			{
-				var path = Utils.GetSaveDataPath() + "/characters/tv/" + m_filename + "_tv.fch";
+				var path = Utils.GetSaveDataPath(Game.instance.GetPlayerProfile().m_fileSource) + "/characters/tv/" + m_filename + "_tv.fch";
 				FileStream fileStream;
 				try
 				{
@@ -419,7 +443,7 @@ namespace AsgardLegacy
 		}
 
 		[HarmonyPatch(typeof(Skills), "CheatRaiseSkill", null)]
-		public class CheatRaiseSkill_al_Patch
+		public class CheatRaiseSkill_AL_Patch
 		{
 			public static bool Prefix(Skills __instance, string name, float value, Player ___m_player)
 			{
@@ -444,7 +468,7 @@ namespace AsgardLegacy
 		}
 
 		[HarmonyPatch(typeof(Terminal), "InputText", null)]
-		public class Cheats_al_Patch
+		public class Cheats_AL_Patch
 		{
 			public static void Postfix(Console __instance, InputField ___m_input)
 			{
@@ -458,235 +482,6 @@ namespace AsgardLegacy
 
 				var className = array[1];
 				ConsoleCommands.CheatChangeClass(className);
-			}
-		}
-
-		[HarmonyPatch(typeof(Aoe), "OnHit")]
-		public static class Aoe_LOSCheck_Prefix
-		{
-			private static bool Prefix(Aoe __instance, Collider collider, Vector3 hitPoint, List<GameObject> ___m_hitList, ref bool __result)
-			{
-				var gameObject = Projectile.FindHitObject(collider);
-
-				bool result;
-				if (___m_hitList.Contains(gameObject))
-				{
-					__result = false;
-					result = false;
-				}
-				else
-				{
-					var component = gameObject.GetComponent<IDestructible>();
-					if (component != null)
-					{
-						var character = component as Character;
-						if (character && !Utility.LOS_IsValid(character, __instance.transform.position, default(Vector3)))
-						{
-							__result = false;
-							return false;
-						}
-					}
-					result = true;
-				}
-				return result;
-			}
-		}
-
-		[HarmonyPatch(typeof(Projectile), "IsValidTarget")]
-		public static class Projectile_AoE_LOSCheck_Prefix
-		{
-			private static bool Prefix(Projectile __instance, IDestructible destr, ref bool hitCharacter, ref bool __result)
-			{
-				var character = destr as Character;
-				if (!character)
-					return true;
-
-				if (!Utility.LOS_IsValid(character, __instance.transform.position, __instance.transform.position + __instance.GetVelocity() * -1.5f))
-				{
-					__result = false;
-					return false;
-				}
-				return true;
-			}
-		}
-
-		[HarmonyPatch(typeof(Player), "ActivateGuardianPower", null)]
-		public class ActivatePowerPrevention_Patch
-		{
-			public static bool Prefix(Player __instance, ref bool __result)
-			{
-				bool result;
-				if (!shouldUseForsakenPower)
-				{
-					__result = false;
-					result = false;
-				}
-				else
-					result = true;
-
-				return result;
-			}
-		}
-
-		[HarmonyPatch(typeof(Player), "OnDodgeMortal", null)]
-		public class DodgeBreaksChanneling_Patch
-		{
-			public static void Postfix(Player __instance)
-			{
-				bool isChanneling = AsgardLegacy.isChanneling;
-				if (isChanneling)
-				{
-					AsgardLegacy.isChanneling = false;
-				}
-			}
-		}
-
-		[HarmonyPatch(typeof(Player), "StartGuardianPower", null)]
-		public class StartPowerPrevention_Patch
-		{
-			public static bool Prefix(Player __instance, ref bool __result)
-			{
-				bool flag = !shouldUseForsakenPower;
-				bool result;
-				if (flag)
-				{
-					__result = false;
-					result = false;
-				}
-				else
-				{
-					result = true;
-				}
-				return result;
-			}
-		}
-
-		[HarmonyPatch(typeof(Player), "CanMove", null)]
-		public class CanMove_Casting_Patch
-		{
-			public static void Postfix(Player __instance, ref bool __result)
-			{
-				if (isChanneling)
-					__result = false;
-			}
-		}
-
-		[HarmonyPatch(typeof(Humanoid), "UseItem")]
-		internal class UseItemPatch
-		{
-			public static bool Prefix(Humanoid __instance, Inventory inventory, ItemDrop.ItemData item, bool fromInventoryGui, Inventory ___m_inventory, ZSyncAnimation ___m_zanim)
-			{
-				var name = item.m_shared.m_name;
-				var player = __instance as Player;
-				bool flag = player != null && al_player != null && player.GetPlayerName() == al_player.al_name && al_player.al_class == PlayerClass.Sentinel;
-
-				if (player == null || al_player == null || player.GetPlayerName() != al_player.al_name || al_player.al_class != PlayerClass.Sentinel)
-					return true;
-
-				var isSeed = name.Contains("$item_pinecone") || name.Contains("$item_beechseeds") || name.Contains("$item_fircone") || name.Contains("$item_ancientseed") || name.Contains("$item_birchseeds");
-				if (isSeed)
-				{
-					if (inventory == null)
-						inventory = ___m_inventory;
-
-					if (!inventory.ContainsItem(item))
-						return false;
-
-					var hoverObject = __instance.GetHoverObject();
-					var hoverable = hoverObject ? hoverObject.GetComponentInParent<Hoverable>() : null;
-					var flag5 = false;
-					if (hoverable != null && !fromInventoryGui)
-					{
-						var componentInParent = hoverObject.GetComponentInParent<Interactable>();
-						flag5 = (componentInParent != null && componentInParent.UseItem(__instance, item));
-					}
-
-					if (flag5)
-						return false;
-
-					/*SE_SeedRegeneration se_SeedRegeneration = (SE_SeedRegeneration) ScriptableObject.CreateInstance(typeof(SE_SeedRegeneration));
-					se_SeedRegeneration.m_ttl = SE_SeedRegeneration.m_baseTTL;
-					se_SeedRegeneration.m_icon = item.GetIcon();
-					bool flag7 = name.Contains("$item_pinecone");
-					if (flag7)
-					{
-						se_SeedRegeneration.m_HealAmount = 10f;
-					}
-					else
-					{
-						bool flag8 = name.Contains("$item_ancientseed");
-						if (flag8)
-						{
-							se_SeedRegeneration.m_HealAmount = 20f;
-						}
-						else
-						{
-							bool flag9 = name.Contains("$item_fircone");
-							if (flag9)
-							{
-								se_SeedRegeneration.m_HealAmount = 7f;
-							}
-							else
-							{
-								bool flag10 = name.Contains("$item_birchseeds");
-								if (flag10)
-								{
-									se_SeedRegeneration.m_HealAmount = 12f;
-								}
-								else
-								{
-									se_SeedRegeneration.m_HealAmount = 5f;
-								}
-							}
-						}
-					}
-					se_SeedRegeneration.m_HealAmount *= GlobalConfigs.c_druidBonusSeeds;
-					player.GetSEMan().AddStatusEffect(se_SeedRegeneration, true);*/
-					Instantiate(ZNetScene.instance.GetPrefab("vfx_Potion_stamina_medium"), player.transform.position, Quaternion.identity);
-					inventory.RemoveOneItem(item);
-					__instance.m_consumeItemEffects.Create(Player.m_localPlayer.transform.position, Quaternion.identity, null, 1f, -1);
-					___m_zanim.SetTrigger("eat");
-					return false;
-				}
-				return true;
-			}
-		}
-
-		[HarmonyPatch(typeof(Skills), "GetSkillDef")]
-		public static class GetSkillDef_Patch
-		{
-			public static void Postfix(Skills __instance, Skills.SkillType type, List<Skills.SkillDef> ___m_skills, ref Skills.SkillDef __result)
-			{
-				MethodInfo methodInfo = AccessTools.Method(typeof(Localization), "AddWord", null, null);
-
-				if (__result != null || ClassLevelSkillDef == null || ___m_skills.Contains(ClassLevelSkillDef))
-					return;
-
-				___m_skills.Add(ClassLevelSkillDef);
-				MethodBase methodBase = methodInfo;
-				object instance = Localization.instance;
-				object[] array = new object[] { "skill_" + ClassLevelSkillDef.m_skill , ClassLevelSkillName };
-				methodBase.Invoke(instance, array);
-
-				__result = ___m_skills.FirstOrDefault((Skills.SkillDef x) => x.m_skill == type);
-			}
-		}
-
-		[HarmonyPatch(typeof(Skills), "IsSkillValid")]
-		public static class ValidSkill_Patch
-		{
-			public static bool Prefix(Skills __instance, Skills.SkillType type, ref bool __result)
-			{
-				bool result;
-				if (type == ClassLevelSkill)
-				{
-					__result = true;
-					result = false;
-				}
-				else
-					result = true;
-
-				return result;
 			}
 		}
 
@@ -732,7 +527,10 @@ namespace AsgardLegacy
 					{
 						if (Utility.IsPlayerAbilityUnlockedByIndex(player, i + 1))
 						{
-							component.color = Color.white;
+							component.color = i == 0 && al_player.al_class == PlayerClass.Berserker && player.transform.position.y > 1000f
+								? abilityCooldownColor
+								: Color.white;
+
 							text = Ability_Hotkeys[i].Value;
 							var isCombo = Ability_Hotkey_Combos[i].Value != "";
 							if (isCombo)
@@ -774,6 +572,7 @@ namespace AsgardLegacy
 					return true;
 
 				var classSetup = false;
+				var raiseSkill = false;
 				if (item.m_shared.m_name.Contains("item_stone") && al_player.al_class != PlayerClass.Guardian)
 				{
 					user.Message(MessageHud.MessageType.Center, "Heimdall granted you the powers of a Guardian", 0, null);
@@ -792,42 +591,84 @@ namespace AsgardLegacy
 					al_player.al_class = PlayerClass.Ranger;
 					classSetup = true;
 				}
-				else if (item.m_shared.m_name.Contains("item_greydwarfeye") && al_player.al_class != PlayerClass.Mage)
-				{
-					user.Message(MessageHud.MessageType.Center, "Freya granted you the powers of an Mage", 0, null);
-					al_player.al_class = PlayerClass.Mage;
-					classSetup = true;
-				}
 				else if(item.m_shared.m_name.Contains("item_wood") && al_player.al_class != PlayerClass.Sentinel)
 				{
 					user.Message(MessageHud.MessageType.Center, "Tyr granted you the powers of a Sentinel", 0, null);
 					al_player.al_class = PlayerClass.Sentinel;
 					classSetup = true;
 				}
+				else if(item.m_shared.m_name.Contains("item_trophy_eikthyr")
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) < 3)
+				{
+					user.Message(MessageHud.MessageType.Center, "Eikthyr granted you strength", 0, null);
+					user.GetSkills().GetSkill(ClassLevelSkill).m_level = 3f;
+					user.GetSkills().GetSkill(ClassLevelSkill).m_accumulator = 0f;
+					raiseSkill = true;
+				}
+				else if(item.m_shared.m_name.Contains("item_trophy_elder")
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) >= 3
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) < 6)
+				{
+					user.Message(MessageHud.MessageType.Center, "The Elder granted you strength", 0, null);
+					user.GetSkills().GetSkill(ClassLevelSkill).m_level = 6f;
+					user.GetSkills().GetSkill(ClassLevelSkill).m_accumulator = 0f;
+					raiseSkill = true;
+				}
+				else if(item.m_shared.m_name.Contains("item_trophy_bonemass")
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) >= 6
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) < 9)
+				{
+					user.Message(MessageHud.MessageType.Center, "Bonemass granted you strength", 0, null);
+					user.GetSkills().GetSkill(ClassLevelSkill).m_level = 9f;
+					user.GetSkills().GetSkill(ClassLevelSkill).m_accumulator = 0f;
+					raiseSkill = true;
+				}
+				else if(item.m_shared.m_name.Contains("item_trophy_dragonqueen")
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) >= 9
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) < 12)
+				{
+					user.Message(MessageHud.MessageType.Center, "Moder granted you strength", 0, null);
+					user.GetSkills().GetSkill(ClassLevelSkill).m_level = 12f;
+					user.GetSkills().GetSkill(ClassLevelSkill).m_accumulator = 0f;
+					raiseSkill = true;
+				}
+				else if(item.m_shared.m_name.Contains("item_trophy_goblinking")
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) >= 12
+					&& user.GetSkills().GetSkillLevel(ClassLevelSkill) < 15)
+				{
+					user.Message(MessageHud.MessageType.Center, "Yagluth granted you strength", 0, null);
+					user.GetSkills().GetSkill(ClassLevelSkill).m_level = 15f;
+					user.GetSkills().GetSkill(ClassLevelSkill).m_accumulator = 0f;
+					raiseSkill = true;
+				}
 
-				if (classSetup)
+				if (classSetup || raiseSkill)
 				{
 					user.GetInventory().RemoveItem(item.m_shared.m_name, 1);
 					user.ShowRemovedMessage(item, 1);
-					UpdatetvPlayer(Player.m_localPlayer);
-					NameCooldowns();
+
+					if(classSetup)
+					{
+						UpdateALPlayer(Player.m_localPlayer);
+						NameCooldowns();
+
+						if (abilitiesStatus != null)
+						{
+							foreach (RectTransform rectTransform in abilitiesStatus)
+							{
+								if (rectTransform.gameObject == null)
+									continue;
+
+								Destroy(rectTransform.gameObject);
+							}
+							abilitiesStatus.Clear();
+						}
+					}
 
 					if (___m_itemSpawnPoint && ___m_fuelAddedEffects != null)
 						___m_fuelAddedEffects.Create(___m_itemSpawnPoint.position, __instance.transform.rotation, null, 1f, -1);
 
 					Instantiate(ZNetScene.instance.GetPrefab("fx_GP_Activation"), user.GetCenterPoint(), Quaternion.identity);
-
-					if (abilitiesStatus != null)
-					{
-						foreach (RectTransform rectTransform in abilitiesStatus)
-						{
-							if (rectTransform.gameObject == null)
-								continue;
-
-							Destroy(rectTransform.gameObject);
-						}
-						abilitiesStatus.Clear();
-					}
 					__result = false;
 					return false;
 				}
@@ -863,92 +704,7 @@ namespace AsgardLegacy
 		{
 			public static void Postfix(Player __instance)
 			{
-                SettvPlayer(__instance);
-			}
-		}
-
-		[HarmonyPatch(typeof(Player), "RaiseSkill")]
-		public class RaiseSkill_Patch
-		{
-			public static bool Prefix(Player __instance, Skills.SkillType skill)
-			{
-				if (skill == ClassLevelSkill && __instance.GetSkills().GetSkillLevel(ClassLevelSkill) >= SkillData.max_level)
-					return false;
-
-				return true;
-			}
-		}
-
-		[HarmonyPatch(typeof(Skills), nameof(Skills.LowerAllSkills))]
-		public class PreventClassLevelSkillDecrease_Patch
-		{
-			public static bool Prefix(float factor, Dictionary<Skills.SkillType, Skills.Skill> ___m_skillData, Player ___m_player)
-			{
-				foreach (var keyValuePair in ___m_skillData)
-				{
-					if (keyValuePair.Key == ClassLevelSkill)
-						continue;
-
-					float num = keyValuePair.Value.m_level * factor;
-					keyValuePair.Value.m_level -= num;
-					keyValuePair.Value.m_accumulator = 0f;
-				}
-				___m_player.Message(MessageHud.MessageType.TopLeft, "$msg_skills_lowered", 0, null);
-
-				return false;
-			}
-		}
-
-		[HarmonyPatch(typeof(Player), "Update", null)]
-		public class AbilityInput_Patch
-		{
-			public static bool Prefix(Player __instance)
-			{
-				if (ZInput.GetButtonDown("GPower") || ZInput.GetButtonDown("JoyGPower"))
-					shouldUseForsakenPower = true;
-
-				return true;
-			}
-
-			public static void Postfix(Player __instance, ref float ___m_maxAirAltitude, ref Rigidbody ___m_body, ref Animator ___m_animator, ref float ___m_lastGroundTouch, float ___m_waterLevel)
-			{
-
-
-				if (Input.GetKeyDown(KeyCode.PageDown))
-					__instance.GetSkills().GetSkill(ClassLevelSkill).m_level = SkillData.max_level;
-
-				if (Utility.ReadyTime)
-				{
-					Player localPlayer = Player.m_localPlayer;
-
-					if (localPlayer != null && playerEnabled)
-					{
-						if (Utility.TakeInput(localPlayer) && !localPlayer.InPlaceMode())
-						{
-							switch (al_player.al_class)
-							{
-								case PlayerClass.Guardian:
-									Guardian.ProcessInput(localPlayer);
-									break;
-								case PlayerClass.Berserker:
-									Berserker.ProcessInput(localPlayer);
-									break;
-								case PlayerClass.Ranger:
-									Ranger.ProcessInput(localPlayer);
-									break;
-								case PlayerClass.Mage:
-
-									break;
-								case PlayerClass.Sentinel:
-
-									break;
-							}
-						}
-					}
-				}
-
-				if (animationCountdown > 0)
-                    animationCountdown--;
+                SetALPlayer(__instance);
 			}
 		}
 

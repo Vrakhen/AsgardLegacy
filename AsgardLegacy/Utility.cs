@@ -11,6 +11,19 @@ namespace AsgardLegacy
 {
 	public static class Utility
 	{
+		public static string[] CleansedSE = { "Frost", "Burning", "Poison", "Lightning", "Tared", "Wet" };
+		public static float[] RuneDamageBonus = { .1f, .2f, .3f, .4f, .5f };
+		public static float[] RuneResistanceBonus = { .05f, .1f, .15f, .2f, .25f };
+		public static float[] RuneDamageMalus = { .0f, .0f, .0f, .0f, .0f };
+		public static float[] RuneResistanceMalus = { .05f, .1f, .15f, .2f, .25f };
+
+		public enum LevelUpUnlock
+        {
+			None,
+			Skill,
+			Passive
+        };
+
 		public static string GetModDataPath(this PlayerProfile profile)
 		{
 			return Path.Combine(Utils.GetSaveDataPath(), "ModData", ModID, "char_" + profile.GetFilename());
@@ -330,6 +343,30 @@ namespace AsgardLegacy
 			player.Message(
 				MessageHud.MessageType.TopLeft, 
 				string.Concat("You need a weapon equipped to cast ", abilityName));
+		}
+
+		public static void SendNotInDungeonMessage(Player player, string abilityName)
+		{
+			player.Message(
+				MessageHud.MessageType.TopLeft,
+				string.Concat("Cannot use ", abilityName, " in dungeon"));
+		}
+
+		public static void SendLevelUpMessage(Player player, int level, LevelUpUnlock unlock, string abilityName)
+		{
+			var message = "You've reached level " + level + " !";
+
+			switch (unlock)
+			{
+				case LevelUpUnlock.Skill:
+					message += "\nNew  skill unlocked : " + abilityName;
+					break;
+				case LevelUpUnlock.Passive:
+					message += "\nNew  passive unlocked : " + abilityName;
+					break;
+			}
+
+			player.Message(MessageHud.MessageType.Center, message);
 		}
 
 		public static float GetLinearValue(int currentLevel, float minValue, float maxValue, float unlockLevel)

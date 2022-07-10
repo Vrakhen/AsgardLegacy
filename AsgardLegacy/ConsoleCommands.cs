@@ -13,6 +13,14 @@ namespace AsgardLegacy
 			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, value);
 			return true;
 		}
+		public static bool CheatResetSkill(Skills skill_instance, string name, float value, Player player)
+		{
+			if (name.ToLower() != "classlevel")
+				return false;
+
+			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, value);
+			return true;
+		}
 
 		public static void CheatChangeClass(string className)
 		{
@@ -27,10 +35,7 @@ namespace AsgardLegacy
 				case "ranger":
 					AsgardLegacy.al_player.al_class = AsgardLegacy.PlayerClass.Ranger;
 					break;
-				case "mage":
-					AsgardLegacy.al_player.al_class = AsgardLegacy.PlayerClass.Mage;
-					break;
-				case "druid":
+				case "sentinel":
 					AsgardLegacy.al_player.al_class = AsgardLegacy.PlayerClass.Sentinel;
 					break;
 				case "none":
@@ -39,7 +44,7 @@ namespace AsgardLegacy
 			}
 
 			Console.instance.Print("Class changed to " + className);
-			AsgardLegacy.UpdatetvPlayer(Player.m_localPlayer);
+			AsgardLegacy.UpdateALPlayer(Player.m_localPlayer);
 			AsgardLegacy.NameCooldowns();
 
 			if (AsgardLegacy.abilitiesStatus == null)

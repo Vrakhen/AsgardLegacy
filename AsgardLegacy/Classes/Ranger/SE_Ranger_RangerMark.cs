@@ -8,7 +8,7 @@ namespace AsgardLegacy
 		public SE_Ranger_RangerMark()
 		{
 			name = "SE_Ranger_RangerMark";
-			m_icon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var1.png");// AbilityIcon;
+			m_icon = AsgardLegacy.Ability_Sprites[3];
 			m_tooltip = "RangerMark";
 			m_name = m_baseName;
 			m_ttl = m_baseTTL;

@@ -202,6 +202,7 @@ GameObject:
   - component: {fileID: 4885128110707290922}
   - component: {fileID: 4046227949035568542}
   - component: {fileID: 787239314085431160}
+  - component: {fileID: 664799940948905964}
   m_Layer: 12
   m_Name: AL_rune_stone
   m_TagString: Untagged
@@ -289,17 +290,17 @@ MonoBehaviour:
   m_autoDestroy: 1
   m_itemData:
     m_stack: 1
-    m_durability: 100
+    m_durability: 25
     m_quality: 1
     m_variant: 0
     m_shared:
-      m_name: Rune
+      m_name: Simple Rune
       m_dlc: 
       m_itemType: 5
       m_icons:
       - {fileID: 21300000, guid: 80bd7b1274bc60444b8eaf5f7d687ad8, type: 3}
       m_attachOverride: 0
-      m_description: Rune
+      m_description: Simple Rune
       m_maxStackSize: 1
       m_maxQuality: 1
       m_weight: 1
@@ -479,7 +480,7 @@ MonoBehaviour:
       m_useDurability: 1
       m_destroyBroken: 1
       m_canBeReparied: 0
-      m_maxDurability: 100
+      m_maxDurability: 25
       m_durabilityPerLevel: 50
       m_useDurabilityDrain: 1
       m_durabilityDrain: 0
@@ -5252,3 +5253,22 @@ ParticleSystemRenderer:
   m_Mesh2: {fileID: 0}
   m_Mesh3: {fileID: 0}
   m_MaskInteraction: 0
+--- !u!205 &664799940948905964
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7481390208060822441}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: -0.000000014901161, y: -0.000000007450581, z: 0.000000014901161}
+  m_Size: 0.3964611
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.035197053
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 8888089797220682929}
+  m_Enabled: 1

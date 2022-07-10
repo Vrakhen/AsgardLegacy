@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 8713909774078228685}
   - component: {fileID: 7337522159192224893}
   - component: {fileID: 1131337133950316279}
+  - component: {fileID: 4194238194415809621}
   m_Layer: 12
   m_Name: AL_rune_stone_lightning_2
   m_TagString: Untagged
@@ -5066,6 +5067,25 @@ ParticleSystemRenderer:
   m_Mesh2: {fileID: 0}
   m_Mesh3: {fileID: 0}
   m_MaskInteraction: 0
+--- !u!205 &4194238194415809621
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2982051002085787499}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0, y: 0, z: 0.000000029802322}
+  m_Size: 0.3845717
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.03608529
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 6043164630365329763}
+  m_Enabled: 1
 --- !u!1 &3597365885000815612
 GameObject:
   m_ObjectHideFlags: 0

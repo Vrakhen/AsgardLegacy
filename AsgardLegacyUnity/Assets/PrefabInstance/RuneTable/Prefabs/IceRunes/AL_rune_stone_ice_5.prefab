@@ -79,6 +79,7 @@ GameObject:
   - component: {fileID: 648741125087605197}
   - component: {fileID: 489751558442292807}
   - component: {fileID: 4016573473130546080}
+  - component: {fileID: 7660639740212011930}
   m_Layer: 12
   m_Name: AL_rune_stone_ice_5
   m_TagString: Untagged
@@ -166,7 +167,7 @@ MonoBehaviour:
   m_autoDestroy: 1
   m_itemData:
     m_stack: 1
-    m_durability: 100
+    m_durability: 250
     m_quality: 1
     m_variant: 0
     m_shared:
@@ -176,7 +177,7 @@ MonoBehaviour:
       m_icons:
       - {fileID: 21300000, guid: 9da4c7d5d989cd6449e5372f432dc6a0, type: 3}
       m_attachOverride: 0
-      m_description: Ice Rune 5
+      m_description: Ice Rune 5 (max)
       m_maxStackSize: 1
       m_maxQuality: 1
       m_weight: 1
@@ -356,7 +357,7 @@ MonoBehaviour:
       m_useDurability: 1
       m_destroyBroken: 1
       m_canBeReparied: 0
-      m_maxDurability: 100
+      m_maxDurability: 250
       m_durabilityPerLevel: 50
       m_useDurabilityDrain: 1
       m_durabilityDrain: 0
@@ -5129,6 +5130,25 @@ ParticleSystemRenderer:
   m_Mesh2: {fileID: 0}
   m_Mesh3: {fileID: 0}
   m_MaskInteraction: 0
+--- !u!205 &7660639740212011930
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2407797919161430621}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0, y: 0.0000000037252903, z: -0.000000029802322}
+  m_Size: 0.39887708
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.035197053
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 8534079761194052694}
+  m_Enabled: 1
 --- !u!1 &2413219424828469023
 GameObject:
   m_ObjectHideFlags: 0

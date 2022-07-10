@@ -9,11 +9,9 @@ namespace AsgardLegacy
 {
 	class Guardian
 	{
-		public static bool groundContact = false;
 		public static bool inFlight = false;
 		public static bool shouldGuardianImpact = false;
-		public static bool isBlocking = false;
-		public static float leapMaxAltitude = 0f;
+		public static float shatterFallDamage = 0f;
 		public static float retributionDamageBlocked = 0f;
 		public static GameObject GO_CastFX;
 
@@ -70,8 +68,6 @@ namespace AsgardLegacy
 						Utility.SendNotEnoughStaminaMessage(player, SE_Guardian_Retribution.m_baseName, GlobalConfigs_Guardian.al_svr_guardian_retribution_staminaCost);
 				}
 			}
-			else if (Input.GetKeyDown(KeyCode.PageUp))
-				player.RaiseSkill(AsgardLegacy.ClassLevelSkill);
 		}
 
 		private static void ActivateShatterFall()
@@ -93,12 +89,17 @@ namespace AsgardLegacy
 			var planarVelocity = new Vector3(traverseRigidbody.velocity.x, 0f, traverseRigidbody.velocity.z);
 			traverseRigidbody.velocity = initVelocity * 2f + new Vector3(0f, 15f, 0f) + planarVelocity * 3f;
 			var rigidbody = traverseRigidbody;
+
+			shatterFallDamage = player.m_rightItem.GetDamage().GetTotalPhysicalDamage();
+
 			rigidbody.velocity *= 0.8f;
 
 			GO_CastFX = Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_perfectblock"), player.transform.position, Quaternion.identity);
 			GO_CastFX = Object.Instantiate(ZNetScene.instance.GetPrefab("vfx_perfectblock"), player.transform.position, Quaternion.identity);
 
 			player.UseStamina(GlobalConfigs_Guardian.al_svr_guardian_shatterFall_staminaCost);
+
+			player.StartCoroutine(WaitForImpact(2f, player));
 		}
 		
 		private static void ActivateAegis(int currentLevel)
@@ -134,10 +135,7 @@ namespace AsgardLegacy
 		{
 			var player = Player.m_localPlayer;
 
-			var se_Ability3_CD = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
-			se_Ability3_CD.m_ttl = GlobalConfigs_Guardian.al_svr_guardian_aegis_cooldown;
-			player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
-
+			AsgardLegacy.isChanneling = true;
 			((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("swing_sledge");
 
 			player.UseStamina(GlobalConfigs_Guardian.al_svr_guardian_iceCrush_staminaCost);
@@ -164,6 +162,16 @@ namespace AsgardLegacy
 			player.StartCoroutine(DetonateRetribution(GlobalConfigs_Guardian.al_svr_guardian_retribution_duration, player));
 		}
 
+		private static IEnumerator WaitForImpact(float waitTime, Player player)
+		{
+			yield return new WaitForSeconds(waitTime);
+
+			if (!inFlight)
+				yield break;
+
+			ImpactEffect(player, 10f);
+		}
+
 		public static void ImpactEffect(Player player, float altitude)
 		{
 			var nbHits = 0;
@@ -172,7 +180,7 @@ namespace AsgardLegacy
 			shouldGuardianImpact = false;
 
 			var hitData = new HitData();
-			hitData.m_damage.m_blunt = player.m_rightItem.GetDamage().GetTotalPhysicalDamage()
+			hitData.m_damage.m_blunt = shatterFallDamage
 					* Utility.GetLinearValue(Utility.GetPlayerClassLevel(player),
 						GlobalConfigs_Guardian.al_svr_guardian_shatterFall_damageMultiplierMin,
 						GlobalConfigs_Guardian.al_svr_guardian_shatterFall_damageMultiplierMax,
@@ -183,6 +191,8 @@ namespace AsgardLegacy
 						GlobalConfigs_Guardian.al_svr_guardian_shatterFall_altitudeMultiplierMax,
 						(int) GlobalConfigs.al_svr_ability1UnlockLevel);
 			hitData.m_pushForce = GlobalConfigs_Guardian.al_svr_guardian_shatterFall_pushForce;
+
+			shatterFallDamage = 0f;
 
 			foreach (var character in characters)
 			{
@@ -211,6 +221,21 @@ namespace AsgardLegacy
 		public static IEnumerator WaitForIceCrush(float waitTime, Player player, int currentLevel)
 		{
 			yield return new WaitForSeconds(waitTime);
+
+			var se_Ability3_CD = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
+
+			if (!AsgardLegacy.isChanneling)
+			{
+				se_Ability3_CD.m_ttl = GlobalConfigs_Guardian.al_svr_guardian_iceCrush_cooldown / 2f;
+				player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
+
+				yield break;
+			}
+
+			se_Ability3_CD.m_ttl = GlobalConfigs_Guardian.al_svr_guardian_iceCrush_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
+
+			AsgardLegacy.isChanneling = false;
 
 			var hitData = new HitData();
 			var damage = player.m_rightItem.GetDamage().GetTotalPhysicalDamage()

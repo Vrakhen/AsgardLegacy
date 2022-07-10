@@ -1,7 +1,5 @@
-﻿using HarmonyLib;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -16,7 +14,9 @@ namespace AsgardLegacy
 			{
 				if (!player.GetSEMan().HaveStatusEffect("SE_Ability1_CD"))
 				{
-					if (player.HaveStamina(GlobalConfigs_Berserker.al_svr_berserker_charge_staminaCost - 1f))
+					if (player.transform.position.y > 1000f)
+						Utility.SendNotInDungeonMessage(player, "Charge");
+					else if (player.HaveStamina(GlobalConfigs_Berserker.al_svr_berserker_charge_staminaCost - 1f))
 					{
 						if (player.m_rightItem != null && player.m_rightItem.IsWeapon())
 							ActivateCharge(currentLevel);
@@ -57,8 +57,6 @@ namespace AsgardLegacy
 						Utility.SendNotEnoughStaminaMessage(player, "Frenzy", GlobalConfigs_Berserker.al_svr_berserker_frenzy_staminaCost);
 				}
 			}
-			else if (Input.GetKeyDown(KeyCode.PageUp))
-				player.RaiseSkill(AsgardLegacy.ClassLevelSkill);
 		}
 
 		private static void ActivateCharge(int currentLevel)
@@ -68,10 +66,7 @@ namespace AsgardLegacy
 			if (player.GetSEMan().HaveStatusEffect("SE_Ability1_CD"))
 				return;
 
-			var se_Ability1_CD = ScriptableObject.CreateInstance<SE_Ability1_CD>();
-			se_Ability1_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_charge_cooldown;
-			player.GetSEMan().AddStatusEffect(se_Ability1_CD, false);
-
+			AsgardLegacy.isChanneling = true;
 			((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("mace_secondary");
 
 			player.UseStamina(GlobalConfigs_Berserker.al_svr_berserker_charge_staminaCost);
@@ -83,15 +78,10 @@ namespace AsgardLegacy
 		{
 			var player = Player.m_localPlayer;
 
-			var se_Ability2_CD = (SE_Ability2_CD) ScriptableObject.CreateInstance(typeof(SE_Ability2_CD));
-			se_Ability2_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_cooldown;
-			player.GetSEMan().AddStatusEffect(se_Ability2_CD, true);
-
+			AsgardLegacy.isChanneling = true;
 			((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("eat");
 
 			player.UseStamina(GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_staminaCost);
-
-			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainBuffCast);
 
 			player.StartCoroutine(WaitForRoar(.5f, player, currentLevel));
 		}
@@ -100,15 +90,12 @@ namespace AsgardLegacy
 		{
 			var player = Player.m_localPlayer;
 
-			var se_Ability3_CD = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
-			se_Ability3_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_ragingStorm_cooldown;
-			player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
-
-			((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("emote_cheer");
+			AsgardLegacy.isChanneling = true;
+			//((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("emote_cheer");
 
 			player.UseStamina(GlobalConfigs_Berserker.al_svr_berserker_ragingStorm_staminaCost);
 
-			player.StartCoroutine(WaitForRagingStorm(.5f, player, currentLevel));
+			player.StartCoroutine(WaitForRagingStorm(0f, player, currentLevel));
 		}
 		
 		private static void ActivateFrenzy(int currentLevel)
@@ -119,6 +106,7 @@ namespace AsgardLegacy
 			se_Ability4_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_frenzy_cooldown;
 			player.GetSEMan().AddStatusEffect(se_Ability4_CD, true);
 
+			AsgardLegacy.isChanneling = true;
 			AsgardLegacy.shouldUseForsakenPower = false;
 			((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("gpower");
 
@@ -131,6 +119,21 @@ namespace AsgardLegacy
 		{
 			yield return new WaitForSeconds(waitTime);
 
+			var se_Ability1_CD = (SE_Ability1_CD) ScriptableObject.CreateInstance(typeof(SE_Ability1_CD));
+
+			if (!AsgardLegacy.isChanneling)
+			{
+				se_Ability1_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_charge_cooldown / 2f;
+				player.GetSEMan().AddStatusEffect(se_Ability1_CD, true);
+
+				yield break;
+			}
+
+			se_Ability1_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_charge_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability1_CD, true);
+
+			AsgardLegacy.isChanneling = false;
+
 			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_perfectblock"), player.transform.position, Quaternion.identity);
 			Object.Instantiate(ZNetScene.instance.GetPrefab("vfx_stonegolem_attack_hit"), player.transform.position, Quaternion.identity);
 
@@ -141,7 +144,7 @@ namespace AsgardLegacy
 
 			if (player.m_rightItem.m_shared.m_itemType == ItemDrop.ItemData.ItemType.TwoHandedWeapon
 				&& Utility.IsPlayerAbilityUnlockedByLevel(player, GlobalConfigs.al_svr_passive1UnlockLevel))
-				damageMultiplier *= Utility.GetLinearValue(currentLevel,
+				damageMultiplier += Utility.GetLinearValue(currentLevel,
 						GlobalConfigs_Berserker.al_svr_berserker_twoHandedExpert_damageBonusMin,
 						GlobalConfigs_Berserker.al_svr_berserker_twoHandedExpert_damageBonusMax,
 						(int) GlobalConfigs.al_svr_passive1UnlockLevel);
@@ -199,8 +202,39 @@ namespace AsgardLegacy
 		{
 			yield return new WaitForSeconds(waitTime);
 
+			var se_Ability2_CD = (SE_Ability2_CD) ScriptableObject.CreateInstance(typeof(SE_Ability2_CD));
+
+			if (!AsgardLegacy.isChanneling)
+			{
+				se_Ability2_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_cooldown / 2f;
+				player.GetSEMan().AddStatusEffect(se_Ability2_CD, true);
+
+				yield break;
+			}
+
+			se_Ability2_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability2_CD, true);
+
+			AsgardLegacy.isChanneling = false;
+
+			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainBuffCast);
+
 			Object.Instantiate(ZNetScene.instance.GetPrefab("fx_guardstone_activate"), player.transform.position, Quaternion.identity);
 			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_greydwarf_shaman_heal"), player.transform.position, Quaternion.identity);
+			
+			var se_Berserker_Weaken = (SE_Berserker_Weaken) ScriptableObject.CreateInstance(typeof(SE_Berserker_Weaken));
+			se_Berserker_Weaken.m_ttl = Utility.GetLinearValue(currentLevel,
+					GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_durationMin,
+					GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_durationMax,
+					(int) GlobalConfigs.al_svr_ability2UnlockLevel);
+			se_Berserker_Weaken.m_damageModifier = Utility.GetLinearValue(currentLevel,
+					GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_weakenValueMin,
+					GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_weakenValueMax,
+					(int) GlobalConfigs.al_svr_ability2UnlockLevel);
+			se_Berserker_Weaken.m_speedModifier = Utility.GetLinearValue(currentLevel,
+					GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_slowValueMin,
+					GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_slowValueMax,
+					(int) GlobalConfigs.al_svr_ability2UnlockLevel);
 
 			var characters = new List<Character>();
 			Character.GetCharactersInRange(player.GetCenterPoint(), GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_radius, characters);
@@ -209,19 +243,6 @@ namespace AsgardLegacy
 				if (character.GetBaseAI() == null || !(character.GetBaseAI() is MonsterAI) || !character.GetBaseAI().IsEnemey(player))
 					continue;
 
-				var se_Berserker_Weaken = (SE_Berserker_Weaken) ScriptableObject.CreateInstance(typeof(SE_Berserker_Weaken));
-				se_Berserker_Weaken.m_ttl = Utility.GetLinearValue(currentLevel,
-						GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_durationMin,
-						GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_durationMax,
-						(int) GlobalConfigs.al_svr_ability2UnlockLevel);
-				se_Berserker_Weaken.m_damageModifier = Utility.GetLinearValue(currentLevel,
-						GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_weakenValueMin,
-						GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_weakenValueMax,
-						(int) GlobalConfigs.al_svr_ability2UnlockLevel);
-				se_Berserker_Weaken.m_speedModifier = Utility.GetLinearValue(currentLevel,
-						GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_slowValueMin,
-						GlobalConfigs_Berserker.al_svr_berserker_dreadfulRoar_slowValueMax,
-						(int) GlobalConfigs.al_svr_ability2UnlockLevel);
 				character.GetSEMan().AddStatusEffect(se_Berserker_Weaken);
 			}
 		}
@@ -229,6 +250,21 @@ namespace AsgardLegacy
 		public static IEnumerator WaitForRagingStorm(float waitTime, Player player, int currentLevel)
 		{
 			yield return new WaitForSeconds(waitTime);
+
+			var se_Ability3_CD = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
+
+			if (!AsgardLegacy.isChanneling)
+			{
+				se_Ability3_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_ragingStorm_cooldown / 2f;
+				player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
+
+				yield break;
+			}
+
+			se_Ability3_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_ragingStorm_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
+
+			AsgardLegacy.isChanneling = false;
 
 			Object.Instantiate(ZNetScene.instance.GetPrefab("fx_guardstone_deactivate"), player.transform.position, Quaternion.identity);
 			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_build_hammer_metal"), player.transform.position, Quaternion.identity);
@@ -248,6 +284,21 @@ namespace AsgardLegacy
 		public static IEnumerator WaitForFrenzy(float waitTime, Player player, int currentLevel)
 		{
 			yield return new WaitForSeconds(waitTime);
+
+			var se_Ability4_CD = (SE_Ability4_CD) ScriptableObject.CreateInstance(typeof(SE_Ability4_CD));
+
+			if (!AsgardLegacy.isChanneling)
+			{
+				se_Ability4_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_frenzy_cooldown / 2f;
+				player.GetSEMan().AddStatusEffect(se_Ability4_CD, true);
+
+				yield break;
+			}
+
+			se_Ability4_CD.m_ttl = GlobalConfigs_Berserker.al_svr_berserker_frenzy_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability4_CD, true);
+
+			AsgardLegacy.isChanneling = false;
 
 			Object.Instantiate(ZNetScene.instance.GetPrefab("fx_guardstone_deactivate"), player.transform.position, Quaternion.identity);
 			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_build_hammer_metal"), player.transform.position, Quaternion.identity);

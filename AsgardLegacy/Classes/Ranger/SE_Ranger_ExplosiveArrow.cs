@@ -8,7 +8,7 @@ namespace AsgardLegacy
 		public SE_Ranger_ExplosiveArrow()
 		{
 			name = "SE_Ranger_ExplosiveArrow";
-			m_icon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var2.png");// AbilityIcon;
+			m_icon = AsgardLegacy.Ability_Sprites[0];
 			m_tooltip = "ExplosiveArrow";
 			m_name = m_baseName;
 			m_ttl = m_baseTTL;

@@ -8,7 +8,7 @@ namespace AsgardLegacy
 		public SE_Berserker_RagingStorm()
 		{
 			name = "SE_Berserker_RagingStorm";
-			m_icon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var2.png");
+			m_icon = AsgardLegacy.Ability_Sprites[2];
 			m_name = m_baseName;
 			m_ttl = m_baseTTL;
 			m_damageModifier = m_baseDamageMult;

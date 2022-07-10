@@ -8,7 +8,7 @@ namespace AsgardLegacy
 		public SE_Guardian_Retribution()
 		{
 			name = "SE_Guardian_Retribution";
-			m_icon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var4.png");// AbilityIcon;
+			m_icon = AsgardLegacy.Ability_Sprites[3];
 			m_tooltip = "Retribution";
 			m_name = m_baseName;
 			m_ttl = m_baseTTL;

@@ -8,7 +8,7 @@ namespace AsgardLegacy
 		public SE_Guardian_Aegis()
 		{
 			name = "SE_Guardian_Aegis";
-			m_icon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var2.png");// AbilityIcon;
+			m_icon = AsgardLegacy.Ability_Sprites[1];
 			m_tooltip = "Aegis";
 			m_name = m_baseName;
 			m_ttl = m_baseTTL;

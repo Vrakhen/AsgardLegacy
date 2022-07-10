@@ -30,7 +30,7 @@ namespace AsgardLegacy
 
 		public override bool CanAdd(Character character)
 		{
-			return !character.IsPlayer();
+			return !character.IsPlayer() && !character.IsBoss();
 		}
 
 		[Header("SE_Berserker_Weaken")]

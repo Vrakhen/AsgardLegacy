@@ -77,10 +77,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\Berserker\Configs_Berserker.cs" />
-    <Compile Include="Classes\Berserker\GlobalConfigs_Berserker.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_VengefulWave_CD.cs" />
+    <Compile Include="Configs\Configs_Berserker.cs" />
+    <Compile Include="Configs\GlobalConfigs_Berserker.cs" />
     <Compile Include="Classes\Berserker\Berserker.cs" />
-    <Compile Include="Classes\Berserker\Berserker_Patch.cs" />
+    <Compile Include="Patches\Class_Berserker_Patch.cs" />
     <Compile Include="Classes\Berserker\SE_Berserker_DenyPain.cs" />
     <Compile Include="Classes\Berserker\SE_Berserker_DenyPain_CD.cs" />
     <Compile Include="Classes\Berserker\SE_Berserker_AdrenalineRush_CD.cs" />
@@ -88,25 +89,47 @@
     <Compile Include="Classes\Berserker\SE_Berserker_RagingStorm.cs" />
     <Compile Include="Classes\Berserker\SE_Berserker_AdrenalineRush.cs" />
     <Compile Include="Classes\Berserker\SE_Berserker_Weaken.cs" />
-    <Compile Include="Classes\Guardian\GlobalConfigs_Guardian.cs" />
-    <Compile Include="Classes\Guardian\Configs_Guardian.cs" />
-    <Compile Include="Classes\Guardian\Guardian_Patch.cs" />
+    <Compile Include="Configs\GlobalConfigs_Guardian.cs" />
+    <Compile Include="Configs\Configs_Guardian.cs" />
+    <Compile Include="Patches\Class_Guardian_Patch.cs" />
     <Compile Include="Classes\Guardian\SE_Guardian_UndyingWill_CD.cs" />
     <Compile Include="Classes\Guardian\SE_Guardian_WarCry_CD.cs" />
     <Compile Include="Classes\Guardian\SE_Guardian_Bulwark_CD.cs" />
     <Compile Include="Classes\Guardian\SE_Guardian_Bulwark.cs" />
     <Compile Include="Classes\Guardian\SE_Guardian_Retribution.cs" />
     <Compile Include="Classes\Guardian\SE_Guardian_Aegis.cs" />
-    <Compile Include="Classes\Ranger\GlobalConfigs_Ranger.cs" />
-    <Compile Include="Classes\Ranger\Configs_Ranger.cs" />
-    <Compile Include="Classes\Ranger\Ranger_Patch.cs" />
+    <Compile Include="Configs\GlobalConfigs_Ranger.cs" />
+    <Compile Include="Configs\Configs_Ranger.cs" />
+    <Compile Include="Patches\Class_Ranger_Patch.cs" />
     <Compile Include="Classes\Ranger\SE_Ranger_ExplosiveArrow.cs" />
     <Compile Include="Classes\Ranger\SE_Ranger_ShadowStalk.cs" />
-    <Compile Include="Configs_Common.cs" />
-    <Compile Include="RuneTableController.cs" />
-    <Compile Include="SE_Ability4_CD.cs" />
-    <Compile Include="SE_Ability3_CD.cs" />
-    <Compile Include="SE_Ability2_CD.cs" />
+    <Compile Include="Configs\Configs_Sentinel.cs" />
+    <Compile Include="Configs\GlobalConfigs_Sentinel.cs" />
+    <Compile Include="Patches\Class_Sentinel_Patch.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_HealersGift.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_HealersGift_CD.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_CleansingRoll_CD.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_Chains.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_PurgingFlames.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_MendingSpirits.cs" />
+    <Compile Include="Classes\Sentinel\SE_Sentinel_RejuvenatingStrike.cs" />
+    <Compile Include="Configs\Configs_Common.cs" />
+    <Compile Include="Patches\Patch_Attack_GetAttackStamina.cs" />
+    <Compile Include="Patches\Patch_Character_CheckDeath.cs" />
+    <Compile Include="Patches\Patch_Player.cs" />
+    <Compile Include="Patches\Patch_Skill.cs" />
+    <Compile Include="Patches\Patch_Player_GetBodyArmor.cs" />
+    <Compile Include="Patches\Patch_Player_UpdateDodge.cs" />
+    <Compile Include="Patches\Patch_Humanoid_StartAttack.cs" />
+    <Compile Include="Patches\Patch_CharacterAnimEvent_FixedUpdate.cs" />
+    <Compile Include="Patches\Patch_Character_Damage.cs" />
+    <Compile Include="Runes\RunesController.cs" />
+    <Compile Include="Runes\RuneTable.cs" />
+    <Compile Include="Runes\RuneTable_Patch.cs" />
+    <Compile Include="Runes\SE_ALRune.cs" />
+    <Compile Include="Skills\SE_Ability4_CD.cs" />
+    <Compile Include="Skills\SE_Ability3_CD.cs" />
+    <Compile Include="Skills\SE_Ability2_CD.cs" />
     <Compile Include="Classes\Sentinel\Sentinel.cs" />
     <Compile Include="Classes\Guardian\Guardian.cs" />
     <Compile Include="Classes\Ranger\Ranger.cs" />
@@ -115,14 +138,14 @@
     <Compile Include="Classes\Ranger\SE_Ranger_RangerMark.cs" />
     <Compile Include="Classes\Ranger\SE_Ranger_SpeedBurst_CD.cs" />
     <Compile Include="Classes\Ranger\SE_Ranger_SpeedBurst.cs" />
-    <Compile Include="ConfigSync.cs" />
+    <Compile Include="Configs\ConfigSync.cs" />
     <Compile Include="ConsoleCommands.cs" />
-    <Compile Include="GlobalConfigs.cs" />
-    <Compile Include="SkillData.cs" />
+    <Compile Include="Configs\GlobalConfigs.cs" />
+    <Compile Include="Skills\SkillData.cs" />
     <Compile Include="AsgardLegacy.cs" />
     <Compile Include="Tutorials.cs" />
     <Compile Include="Utility.cs" />
-    <Compile Include="SE_Ability1_CD.cs" />
+    <Compile Include="Skills\SE_Ability1_CD.cs" />
     <Compile Include="Properties\IgnoreAccessModifiers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -142,7 +165,6 @@
     <None Include="Package\README.md" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Classes\Mage\" />
     <Folder Include="Package\plugins\" />
   </ItemGroup>
   <ItemGroup>

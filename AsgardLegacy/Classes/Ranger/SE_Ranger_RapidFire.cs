@@ -8,7 +8,7 @@ namespace AsgardLegacy
 		public SE_Ranger_RapidFire()
 		{
 			name = "SE_Ranger_RapidFire";
-			m_icon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var2.png");// AbilityIcon;
+			m_icon = AsgardLegacy.Ability_Sprites[2];
 			m_tooltip = "RapidFire";
 			m_name = m_baseName;
 			m_ttl = m_baseTTL;

@@ -141,6 +141,7 @@ GameObject:
   - component: {fileID: 4804263140296995984}
   - component: {fileID: 2705927359807871442}
   - component: {fileID: 471568692395700173}
+  - component: {fileID: 1569817659365875780}
   m_Layer: 12
   m_Name: AL_rune_stone_poison_5
   m_TagString: Untagged
@@ -228,7 +229,7 @@ MonoBehaviour:
   m_autoDestroy: 1
   m_itemData:
     m_stack: 1
-    m_durability: 100
+    m_durability: 250
     m_quality: 1
     m_variant: 0
     m_shared:
@@ -238,7 +239,7 @@ MonoBehaviour:
       m_icons:
       - {fileID: 21300000, guid: 7c701ebade1c4be4485e7ee16a65d268, type: 3}
       m_attachOverride: 0
-      m_description: Poison Rune 5
+      m_description: Poison Rune 5 (max)
       m_maxStackSize: 1
       m_maxQuality: 1
       m_weight: 1
@@ -418,7 +419,7 @@ MonoBehaviour:
       m_useDurability: 1
       m_destroyBroken: 1
       m_canBeReparied: 0
-      m_maxDurability: 100
+      m_maxDurability: 250
       m_durabilityPerLevel: 50
       m_useDurabilityDrain: 1
       m_durabilityDrain: 0
@@ -5191,6 +5192,25 @@ ParticleSystemRenderer:
   m_Mesh2: {fileID: 0}
   m_Mesh3: {fileID: 0}
   m_MaskInteraction: 0
+--- !u!205 &1569817659365875780
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6337948971513474764}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0, y: -0.0000000037252903, z: 0}
+  m_Size: 0.39646113
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.038814604
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 8294427429163253068}
+  m_Enabled: 1
 --- !u!1 &7409329106302050802
 GameObject:
   m_ObjectHideFlags: 0

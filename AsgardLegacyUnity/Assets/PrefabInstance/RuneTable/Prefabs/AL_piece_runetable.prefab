@@ -292,6 +292,7 @@ GameObject:
   - component: {fileID: 3815429472406378178}
   - component: {fileID: 3914964081491821788}
   - component: {fileID: 4590079082878332554}
+  - component: {fileID: 2819744592123101680}
   m_Layer: 10
   m_Name: AL_piece_runetable
   m_TagString: Untagged
@@ -416,6 +417,28 @@ MonoBehaviour:
     m_effectPrefabs: []
   m_repairItemDoneEffects:
     m_effectPrefabs: []
+--- !u!205 &2819744592123101680
+LODGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5098278506572909384}
+  serializedVersion: 2
+  m_LocalReferencePoint: {x: 0.020703435, y: 1.4767152, z: -0.17294312}
+  m_Size: 3.1434371
+  m_FadeMode: 0
+  m_AnimateCrossFading: 0
+  m_LastLODIsBillboard: 0
+  m_LODs:
+  - screenRelativeHeight: 0.095661834
+    fadeTransitionWidth: 0
+    renderers:
+    - renderer: {fileID: 6652873507408866479}
+    - renderer: {fileID: 4726689314020689816}
+    - renderer: {fileID: 7695160298045063717}
+    - renderer: {fileID: 6078628812859366506}
+  m_Enabled: 1
 --- !u!1 &5209741531736672240
 GameObject:
   m_ObjectHideFlags: 0

@@ -19,5 +19,7 @@ namespace AsgardLegacy
 
 		[Header("SE_Ranger_RangerMarked")]
 		public static float m_baseTTL = 15f;
+
+		public float m_damageMultiplier = 1.5f;
 	}
 }

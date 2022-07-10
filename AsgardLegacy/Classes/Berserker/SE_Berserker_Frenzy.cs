@@ -8,7 +8,7 @@ namespace AsgardLegacy
 		public SE_Berserker_Frenzy()
 		{
 			name = "SE_Berserker_Frenzy";
-			m_icon = AssetUtils.LoadSpriteFromFile("JotunnModExample/Assets/test_var3.png");
+			m_icon = AsgardLegacy.Ability_Sprites[3];
 			m_name = m_baseName;
 			m_ttl = m_baseTTL;
 			m_damageModifier = m_baseDamageMult;

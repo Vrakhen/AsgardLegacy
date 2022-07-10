@@ -1,365 +1,312 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using System.Reflection;
-using HarmonyLib;
 using UnityEngine;
-using Random = UnityEngine.Random;
+using Object = UnityEngine.Object;
 
 namespace AsgardLegacy
 {
 	public class Sentinel
 	{
-		public static void Process_Input(Player player, float altitude)
+		public static void ProcessInput(Player player)
 		{
-			/*var random = new Random();
-			var vector = default(Vector3);
-			var ability3_Input_Down = Utility.Ability3_Input_Down;
-			if (ability3_Input_Down)
+			var currentLevel = Utility.GetPlayerClassLevel(player);
+			if (Utility.Ability1_Input_Down && currentLevel >= GlobalConfigs.al_svr_ability1UnlockLevel)
 			{
-				bool flag = !player.GetSEMan().HaveStatusEffect("SE_VL_Ability3_CD");
-				if (flag)
+				if (!player.GetSEMan().HaveStatusEffect("SE_Ability1_CD"))
 				{
-					TribesOfValheim.shouldUseForsakenPower = false;
-					bool flag2 = player.GetStamina() >= Utility.GetRootCost && !TribesOfValheim.isChanneling;
-					if (flag2)
+					if (player.HaveStamina(GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_staminaCost - 1f))
 					{
-						TribesOfValheim.isChanneling = true;
-						StatusEffect statusEffect = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
-						statusEffect.m_ttl = VL_Utility.GetRootCooldownTime;
-						player.GetSEMan().AddStatusEffect(statusEffect, false);
-						player.UseStamina(VL_Utility.GetRootCost);
-						((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("gpower");
-						((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetSpeed(0.3f);
-						float level = player.GetSkills().GetSkillList().FirstOrDefault((Skills.Skill x) => x.m_info == ValheimLegends.ConjurationSkillDef).m_level;
-						Class_Druid.rootCount = 0;
-						Class_Druid.rootCountTrigger = 32 - Mathf.RoundToInt(0.12f * level);
-						Vector3 vector2 = player.transform.right * 2.5f;
-						bool flag3 = Random.Range(0f, 1f) < 0.5f;
-						if (flag3)
-						{
-							vector2 *= -1f;
-						}
-						vector = player.transform.position + player.transform.up * 3f + player.GetLookDir() * 2f + vector2;
-						GameObject prefab = ZNetScene.instance.GetPrefab("gdking_root_projectile");
-						Class_Druid.GO_Root = Object.Instantiate<GameObject>(prefab, new Vector3(vector.x, vector.y, vector.z), Quaternion.identity);
-						Class_Druid.P_Root = Class_Druid.GO_Root.GetComponent<Projectile>();
-						Class_Druid.P_Root.name = "Root";
-						Class_Druid.P_Root.m_respawnItemOnHit = false;
-						Class_Druid.P_Root.m_spawnOnHit = null;
-						Class_Druid.P_Root.m_ttl = 35f;
-						Class_Druid.P_Root.m_gravity = 0f;
-						Class_Druid.P_Root.m_rayRadius = 0.1f;
-						Traverse.Create(Class_Druid.P_Root).Field("m_skill").SetValue(ValheimLegends.ConjurationSkill);
-						Class_Druid.P_Root.transform.localRotation = Quaternion.LookRotation(player.GetLookDir());
-						Class_Druid.GO_Root.transform.localScale = Vector3.one * 1.5f;
-						player.RaiseSkill(ValheimLegends.ConjurationSkill, VL_Utility.GetRootSkillGain);
+						if (player.m_rightItem != null && player.m_rightItem.IsWeapon())
+							ActivateRejuvenatingStrike();
+						else
+							Utility.SendNoWeaponEquippedMessage(player, "Rejuvenating Strike");
 					}
 					else
-					{
-						player.Message(1, string.Concat(new object[]
-						{
-							"Not enough stamina to channel Root: (",
-							player.GetStamina().ToString("#.#"),
-							"/",
-							VL_Utility.GetRootCost,
-							")"
-						}), 0, null);
-					}
-				}
-				else
-				{
-					player.Message(1, "Ability not ready", 0, null);
+						Utility.SendNotEnoughStaminaMessage(player, "Rejuvenating Strike", GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_staminaCost);
 				}
 			}
-			else
+			else if (Utility.Ability2_Input_Down && currentLevel >= GlobalConfigs.al_svr_ability2UnlockLevel)
 			{
-				bool flag4 = VL_Utility.Ability3_Input_Pressed && player.GetStamina() > VL_Utility.GetRootCostPerUpdate && ValheimLegends.isChanneling && Mathf.Max(0f, altitude - player.transform.position.y) <= 2f;
-				if (flag4)
+				if (!player.GetSEMan().HaveStatusEffect("SE_Ability2_CD"))
 				{
-					Class_Druid.rootCount++;
-					VL_Utility.SetTimer();
-					player.UseStamina(VL_Utility.GetRootCostPerUpdate);
-					ValheimLegends.isChanneling = true;
-					bool flag5 = Class_Druid.rootCount >= Class_Druid.rootCountTrigger;
-					if (flag5)
-					{
-						player.RaiseSkill(ValheimLegends.ConjurationSkill, 0.06f);
-						float level2 = player.GetSkills().GetSkillList().FirstOrDefault((Skills.Skill x) => x.m_info == ValheimLegends.ConjurationSkillDef).m_level;
-						Class_Druid.rootCount = 0;
-						bool flag6 = Class_Druid.GO_Root != null && Class_Druid.GO_Root.transform != null;
-						if (flag6)
-						{
-							RaycastHit raycastHit = default(RaycastHit);
-							Vector3 position = player.transform.position;
-							Vector3 vector3 = (!Physics.Raycast(player.GetEyePoint(), player.GetLookDir(), ref raycastHit, float.PositiveInfinity, Class_Druid.Script_Layermask) || !raycastHit.collider) ? (position + player.GetLookDir() * 1000f) : raycastHit.point;
-							HitData hitData = new HitData();
-							hitData.m_damage.m_pierce = Random.Range(10f + 0.6f * level2, 15f + 1.2f * level2) * VL_GlobalConfigs.g_DamageModifer * VL_GlobalConfigs.c_druidVines;
-							hitData.m_pushForce = 2f;
-							Vector3 vector4 = Vector3.MoveTowards(Class_Druid.GO_Root.transform.position, vector3, 1f);
-							bool flag7 = Class_Druid.P_Root != null && Class_Druid.P_Root.name == "Root";
-							if (flag7)
-							{
-								Class_Druid.P_Root.Setup(player, (vector4 - Class_Druid.GO_Root.transform.position) * 75f, -1f, hitData, null);
-								Traverse.Create(Class_Druid.P_Root).Field("m_skill").SetValue(ValheimLegends.ConjurationSkill);
-							}
-						}
-						Class_Druid.GO_Root = null;
-						Vector3 vector5 = player.transform.right * 2.5f;
-						bool flag8 = Random.Range(0f, 1f) < 0.5f;
-						if (flag8)
-						{
-							vector5 *= -1f;
-						}
-						vector = player.transform.position + player.transform.up * 3f + player.GetLookDir() * 2f + vector5;
-						GameObject prefab2 = ZNetScene.instance.GetPrefab("gdking_root_projectile");
-						Class_Druid.GO_Root = Object.Instantiate<GameObject>(prefab2, new Vector3(vector.x, vector.y, vector.z), Quaternion.identity);
-						Class_Druid.P_Root = Class_Druid.GO_Root.GetComponent<Projectile>();
-						Class_Druid.P_Root.name = "Root";
-						Class_Druid.P_Root.m_respawnItemOnHit = false;
-						Class_Druid.P_Root.m_spawnOnHit = null;
-						Class_Druid.P_Root.m_ttl = (float) (Class_Druid.rootCountTrigger + 1);
-						Class_Druid.P_Root.m_gravity = 0f;
-						Class_Druid.P_Root.m_rayRadius = 0.1f;
-						Traverse.Create(Class_Druid.P_Root).Field("m_skill").SetValue(ValheimLegends.ConjurationSkill);
-						Class_Druid.P_Root.transform.localRotation = Quaternion.LookRotation(player.GetLookDir());
-						Class_Druid.GO_Root.transform.localScale = Vector3.one * 1.5f;
-					}
+					if (player.HaveStamina(GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_staminaCost - 1f))
+						ActivateMendingSpirits(currentLevel);
+					else
+						Utility.SendNotEnoughStaminaMessage(player, "Mending Spirits", GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_staminaCost);
 				}
-				else
+			}
+			else if (Utility.Ability3_Input_Down && currentLevel >= GlobalConfigs.al_svr_ability3UnlockLevel)
+			{
+				if (!player.GetSEMan().HaveStatusEffect("SE_Ability3_CD"))
 				{
-					bool flag9 = ((VL_Utility.Ability3_Input_Up || player.GetStamina() <= VL_Utility.GetRootCostPerUpdate) && ValheimLegends.isChanneling) || Mathf.Max(0f, altitude - player.transform.position.y) > 2f;
-					if (flag9)
+					if (player.HaveStamina(GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_staminaCost - 1f))
 					{
-						bool flag10 = Class_Druid.GO_Root != null && Class_Druid.GO_Root.transform != null;
-						if (flag10)
-						{
-							RaycastHit raycastHit2 = default(RaycastHit);
-							Vector3 position2 = player.transform.position;
-							Vector3 vector6 = (!Physics.Raycast(player.GetEyePoint(), player.GetLookDir(), ref raycastHit2, float.PositiveInfinity, Class_Druid.Script_Layermask) || !raycastHit2.collider) ? (position2 + player.GetLookDir() * 1000f) : raycastHit2.point;
-							HitData hitData2 = new HitData();
-							hitData2.m_damage.m_pierce = 10f;
-							hitData2.m_pushForce = 10f;
-							hitData2.SetAttacker(player);
-							Vector3 vector7 = Vector3.MoveTowards(Class_Druid.GO_Root.transform.position, vector6, 1f);
-							Class_Druid.P_Root.Setup(player, (vector7 - Class_Druid.GO_Root.transform.position) * 65f, -1f, hitData2, null);
-							Traverse.Create(Class_Druid.P_Root).Field("m_skill").SetValue(ValheimLegends.ConjurationSkill);
-						}
-						Class_Druid.GO_Root = null;
-						ValheimLegends.isChanneling = false;
+						if (player.m_rightItem != null && player.m_rightItem.IsWeapon())
+							ActivateChainsOfLight(currentLevel);
+						else
+							Utility.SendNoWeaponEquippedMessage(player, "Chains of Light");
 					}
 					else
-					{
-						bool ability2_Input_Down = VL_Utility.Ability2_Input_Down;
-						if (ability2_Input_Down)
-						{
-							bool flag11 = !player.GetSEMan().HaveStatusEffect("SE_VL_Ability2_CD");
-							if (flag11)
-							{
-								bool flag12 = player.GetStamina() >= VL_Utility.GetDefenderCost;
-								if (flag12)
-								{
-									Vector3 lookDir = player.GetLookDir();
-									lookDir.y = 0f;
-									player.transform.rotation = Quaternion.LookRotation(lookDir);
-									ValheimLegends.shouldUseGuardianPower = false;
-									StatusEffect statusEffect2 = (SE_Ability2_CD) ScriptableObject.CreateInstance(typeof(SE_Ability2_CD));
-									statusEffect2.m_ttl = VL_Utility.GetDefenderCooldownTime;
-									player.GetSEMan().AddStatusEffect(statusEffect2, false);
-									player.UseStamina(VL_Utility.GetDefenderCost);
-									float level3 = player.GetSkills().GetSkillList().FirstOrDefault((Skills.Skill x) => x.m_info == ValheimLegends.ConjurationSkillDef).m_level;
-									((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("gpower");
-									Object.Instantiate<GameObject>(ZNetScene.instance.GetPrefab("vfx_WishbonePing"), player.transform.position, Quaternion.identity);
-									GameObject prefab3 = ZNetScene.instance.GetPrefab("TentaRoot");
-									CharacterTimedDestruction component = prefab3.GetComponent<CharacterTimedDestruction>();
-									bool flag13 = component != null;
-									if (flag13)
-									{
-										component.m_timeoutMin = 24f + 0.3f * level3;
-										component.m_timeoutMax = component.m_timeoutMin;
-										component.m_triggerOnAwake = true;
-										component.enabled = true;
-									}
-									List<Vector3> list = new List<Vector3>();
-									list.Clear();
-									vector = player.transform.position + player.GetLookDir() * 5f + player.transform.right * 5f;
-									list.Add(vector);
-									vector = player.transform.position + player.GetLookDir() * 5f + player.transform.right * 5f * -1f;
-									list.Add(vector);
-									vector = player.transform.position + player.GetLookDir() * 5f * -1f;
-									list.Add(vector);
-									for (int i = 0; i < list.Count; i++)
-									{
-										Class_Druid.GO_RootDefender = Object.Instantiate<GameObject>(prefab3, list[i], Quaternion.identity);
-										Character component2 = Class_Druid.GO_RootDefender.GetComponent<Character>();
-										bool flag14 = component2 != null;
-										if (flag14)
-										{
-											SE_RootsBuff se_RootsBuff = (SE_RootsBuff) ScriptableObject.CreateInstance(typeof(SE_RootsBuff));
-											se_RootsBuff.m_ttl = SE_RootsBuff.m_baseTTL;
-											se_RootsBuff.damageModifier = 0.5f + 0.015f * level3 * VL_GlobalConfigs.g_DamageModifer * VL_GlobalConfigs.c_druidDefenders;
-											se_RootsBuff.staminaRegen = 0.5f + 0.05f * level3;
-											se_RootsBuff.summoner = player;
-											se_RootsBuff.centerPoint = player.transform.position;
-											component2.GetSEMan().AddStatusEffect(se_RootsBuff, false);
-											component2.SetMaxHealth(30f + 6f * level3);
-											component2.transform.localScale = (0.75f + 0.005f * level3) * Vector3.one;
-											component2.m_faction = 0;
-											component2.SetTamed(true);
-										}
-										Object.Instantiate<GameObject>(ZNetScene.instance.GetPrefab("vfx_Potion_stamina_medium"), component2.transform.position, Quaternion.identity);
-									}
-									GameObject prefab4 = ZNetScene.instance.GetPrefab("VL_Deathsquit");
-									CharacterTimedDestruction component3 = prefab4.GetComponent<CharacterTimedDestruction>();
-									bool flag15 = component3 != null;
-									if (flag15)
-									{
-										component3.m_timeoutMin = 24f + 0.3f * level3;
-										component3.m_timeoutMax = component3.m_timeoutMin;
-										component3.m_triggerOnAwake = true;
-										component3.enabled = true;
-									}
-									int num = 2 + Mathf.RoundToInt(0.05f * level3);
-									for (int j = 0; j < num; j++)
-									{
-										vector = player.transform.position + player.transform.up * 4f + (player.GetLookDir() * Random.Range(-(5f + 0.1f * level3), 5f + 0.1f * level3) + player.transform.right * Random.Range(-(5f + 0.1f * level3), 5f + 0.1f * level3));
-										GameObject gameObject = Object.Instantiate<GameObject>(prefab4, vector, Quaternion.identity);
-										Character component4 = gameObject.GetComponent<Character>();
-										component4.m_name = "Drusquito";
-										bool flag16 = component4 != null;
-										if (flag16)
-										{
-											SE_Companion se_Companion = (SE_Companion) ScriptableObject.CreateInstance(typeof(SE_Companion));
-											se_Companion.m_ttl = 60f;
-											se_Companion.damageModifier = 0.05f + 0.0075f * level3 * VL_GlobalConfigs.g_DamageModifer * VL_GlobalConfigs.c_druidDefenders;
-											se_Companion.summoner = player;
-											component4.GetSEMan().AddStatusEffect(se_Companion, false);
-											component4.transform.localScale = (0.4f + 0.005f * level3) * Vector3.one;
-											component4.m_faction = 0;
-											component4.SetTamed(true);
-										}
-										Object.Instantiate<GameObject>(ZNetScene.instance.GetPrefab("fx_float_hitwater"), component4.transform.position, Quaternion.identity);
-									}
-									player.RaiseSkill(ValheimLegends.ConjurationSkill, VL_Utility.GetDefenderSkillGain);
-								}
-								else
-								{
-									player.Message(1, string.Concat(new object[]
-									{
-										"Not enough stamina to summon root defenders: (",
-										player.GetStamina().ToString("#.#"),
-										"/",
-										VL_Utility.GetDefenderCost,
-										")"
-									}), 0, null);
-								}
-							}
-							else
-							{
-								player.Message(1, "Ability not ready", 0, null);
-							}
-						}
-						else
-						{
-							bool ability1_Input_Down = VL_Utility.Ability1_Input_Down;
-							if (ability1_Input_Down)
-							{
-								bool flag17 = !player.GetSEMan().HaveStatusEffect("SE_VL_Ability1_CD");
-								if (flag17)
-								{
-									bool flag18 = player.GetStamina() >= VL_Utility.GetRegenerationCost;
-									if (flag18)
-									{
-										StatusEffect statusEffect3 = (SE_Ability1_CD) ScriptableObject.CreateInstance(typeof(SE_Ability1_CD));
-										statusEffect3.m_ttl = VL_Utility.GetRegenerationCooldownTime;
-										player.GetSEMan().AddStatusEffect(statusEffect3, false);
-										player.UseStamina(VL_Utility.GetRegenerationCost);
-										float level4 = player.GetSkills().GetSkillList().FirstOrDefault((Skills.Skill x) => x.m_info == ValheimLegends.AlterationSkillDef).m_level;
-										player.StartEmote("cheer", true);
-										Class_Druid.GO_CastFX = Object.Instantiate<GameObject>(ZNetScene.instance.GetPrefab("fx_guardstone_permitted_add"), player.GetCenterPoint(), Quaternion.identity);
-										Class_Druid.GO_CastFX = Object.Instantiate<GameObject>(ZNetScene.instance.GetPrefab("vfx_WishbonePing"), player.transform.position, Quaternion.identity);
-										SE_Regeneration se_Regeneration = (SE_Regeneration) ScriptableObject.CreateInstance(typeof(SE_Regeneration));
-										se_Regeneration.m_ttl = SE_Regeneration.m_baseTTL;
-										se_Regeneration.m_icon = ZNetScene.instance.GetPrefab("TrophyGreydwarfShaman").GetComponent<ItemDrop>().m_itemData.GetIcon();
-										se_Regeneration.m_HealAmount = 0.5f + 0.4f * level4 * VL_GlobalConfigs.g_DamageModifer * VL_GlobalConfigs.c_druidRegen;
-										se_Regeneration.doOnce = false;
-										List<Character> list2 = new List<Character>();
-										list2.Clear();
-										Character.GetCharactersInRange(player.GetCenterPoint(), 30f + 0.2f * level4, list2);
-										foreach (Character character in list2)
-										{
-											bool flag19 = !BaseAI.IsEnemy(player, character);
-											if (flag19)
-											{
-												bool flag20 = character == Player.m_localPlayer;
-												if (flag20)
-												{
-													character.GetSEMan().AddStatusEffect(se_Regeneration, true);
-												}
-												else
-												{
-													bool flag21 = character.IsPlayer();
-													if (flag21)
-													{
-														character.GetSEMan().AddStatusEffect(se_Regeneration.name, true);
-													}
-													else
-													{
-														character.GetSEMan().AddStatusEffect(se_Regeneration, true);
-													}
-												}
-											}
-										}
-										player.RaiseSkill(ValheimLegends.AlterationSkill, VL_Utility.GetRegenerationSkillGain);
-									}
-									else
-									{
-										player.Message(1, string.Concat(new object[]
-										{
-											"Not enough stamina to for Regeneration: (",
-											player.GetStamina().ToString("#.#"),
-											"/",
-											VL_Utility.GetRegenerationCost,
-											")"
-										}), 0, null);
-									}
-								}
-								else
-								{
-									player.Message(1, "Ability not ready", 0, null);
-								}
-							}
-							else
-							{
-								ValheimLegends.isChanneling = false;
-							}
-						}
-					}
+						Utility.SendNotEnoughStaminaMessage(player, "Chains of Light", GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_staminaCost);
 				}
-			}*/
+			}
+			else if (Utility.Ability4_Input_Down && currentLevel >= GlobalConfigs.al_svr_ability4UnlockLevel)
+			{
+				if (!player.GetSEMan().HaveStatusEffect("SE_Ability4_CD"))
+				{
+					if (player.HaveStamina(GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_staminaCost - 1f))
+					{
+						if (player.m_rightItem != null && player.m_rightItem.IsWeapon())
+							ActivatePurgingFlames(currentLevel);
+						else
+							Utility.SendNoWeaponEquippedMessage(player, "Purging Flames");
+					}
+					else
+						Utility.SendNotEnoughStaminaMessage(player, "Purging Flames", GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_staminaCost);
+				}
+			}
 		}
 
-		private static int Script_Layermask = LayerMask.GetMask(new string[]
+		private static void ActivateRejuvenatingStrike()
 		{
-			"Default",
-			"static_solid",
-			"Default_small",
-			"piece_nonsolid",
-			"terrain",
-			"vehicle",
-			"piece",
-			"viewblock",
-			"character",
-			"character_net",
-			"character_ghost"
-		});
+			var player = Player.m_localPlayer;
 
-		private static GameObject GO_CastFX;
-		private static GameObject GO_Root;
-		private static Projectile P_Root;
-		private static StatusEffect SE_Root;
-		private static GameObject GO_RootDefender;
-		private static int rootCount;
-		private static int rootCountTrigger;
+			if (player.GetSEMan().HaveStatusEffect("SE_Ability1_CD"))
+				return;
+
+			var se_Ability1_CD = ScriptableObject.CreateInstance<SE_Ability1_CD>();
+			se_Ability1_CD.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability1_CD, false);
+
+			var se_RejuvenatingStrike = (SE_Sentinel_RejuvenatingStrike) ScriptableObject.CreateInstance(typeof(SE_Sentinel_RejuvenatingStrike));
+			se_RejuvenatingStrike.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_duration;
+			player.GetSEMan().AddStatusEffect(se_RejuvenatingStrike, false);
+
+			player.UseStamina(GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_staminaCost);
+		}
+
+		private static void ActivateMendingSpirits(int currentLevel)
+		{
+			var player = Player.m_localPlayer;
+
+			AsgardLegacy.isChanneling = true;
+			((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("emote_cheer");
+
+			player.UseStamina(GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_staminaCost);
+
+			player.StartCoroutine(WaitForMendingSpirits(.5f, player, currentLevel));
+		}
+
+		private static void ActivateChainsOfLight(int currentLevel)
+		{
+			var player = Player.m_localPlayer;
+			var position = player.transform.position;
+
+			var se_Ability3_CD = (SE_Ability3_CD) ScriptableObject.CreateInstance(typeof(SE_Ability3_CD));
+			se_Ability3_CD.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability3_CD, true);
+
+			var se_Chains = (SE_Sentinel_Chains) ScriptableObject.CreateInstance(typeof(SE_Sentinel_Chains));
+			se_Chains.m_ttl = Utility.GetLinearValue(currentLevel,
+				GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_rootDurationMin,
+				GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_rootDurationMax,
+				GlobalConfigs.al_svr_ability3UnlockLevel);
+			se_Chains.m_speedModifier = 0f;
+
+			var damage = player.m_rightItem.GetDamage().GetTotalDamage();
+			damage *= Utility.GetLinearValue(currentLevel,
+				GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_damageMultiplierMin,
+				GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_damageMultiplierMax,
+				GlobalConfigs.al_svr_ability3UnlockLevel);
+
+			var hitData = new HitData();
+			hitData.m_damage.m_fire = damage / 2f;
+			hitData.m_damage.m_lightning = damage / 2f;
+
+            var nbHits = 0;
+			var allCharacters = Character.GetAllCharacters();
+			foreach (var character in allCharacters)
+			{
+				if (!BaseAI.IsEnemy(player, character)
+					|| (character.transform.position - position).magnitude > GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_radius
+					|| !Utility.LOS_IsValid(character, position))
+					continue;
+
+				nbHits++;
+				character.Damage(hitData);
+				character.GetSEMan().AddStatusEffect(se_Chains);
+			}
+
+			if (nbHits > 0)
+				player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainAoeBaseHit);
+			if (nbHits > 1)
+				player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainAoeMultipleHit * (nbHits - 1));
+
+			Object.Instantiate(ZNetScene.instance.GetPrefab("fx_guardstone_activate"), position, Quaternion.identity);
+			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_Frost_Start"), position, Quaternion.identity);
+
+			player.UseStamina(GlobalConfigs_Sentinel.al_svr_sentinel_chainsOfLight_staminaCost);
+		}
+
+		private static void ActivatePurgingFlames(int currentLevel)
+		{
+			var player = Player.m_localPlayer;
+
+			AsgardLegacy.isChanneling = true;
+			AsgardLegacy.shouldUseForsakenPower = false;
+			((ZSyncAnimation) typeof(Player).GetField("m_zanim", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Player.m_localPlayer)).SetTrigger("gpower");
+
+			player.UseStamina(GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_staminaCost);
+
+			player.StartCoroutine(WaitForPurgingFlames(1.5f, player, currentLevel));
+		}
+
+		public static void RejuvImpactEffect(Player player, int targetId, HitData hit)
+		{
+			var nbHits = 0;
+			var characters = Character.GetAllCharacters();
+
+			var stamina = Utility.GetLinearValue(
+				Utility.GetPlayerClassLevel(player),
+				GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_staminaMin,
+				GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_staminaMax,
+				(int) GlobalConfigs.al_svr_ability1UnlockLevel);
+
+			foreach (var character in characters)
+			{
+				if ((character.transform.position - player.transform.position).magnitude > GlobalConfigs_Sentinel.al_svr_sentinel_rejuvenatingStrike_radius
+					|| !Utility.LOS_IsValid(character, player.transform.position, player.GetCenterPoint()))
+					continue;
+
+				if(character.IsPlayer())
+				{
+					character.AddStamina(stamina);
+
+					Object.Instantiate(ZNetScene.instance.GetPrefab("fx_guardstone_permitted_add"), character.transform.position, Quaternion.identity);
+					Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_Potion_stamina_Start"), character.transform.position, Quaternion.identity);
+				}
+				else if(character.GetInstanceID() != targetId && BaseAI.IsEnemy(player, character))
+				{
+					character.Damage(hit);
+					nbHits++;
+				}
+			}
+
+			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainAoeMultipleHit * nbHits);
+		}
+
+		public static IEnumerator WaitForMendingSpirits(float waitTime, Player player, int currentLevel)
+		{
+			yield return new WaitForSeconds(waitTime);
+
+			var se_Ability2_CD = (SE_Ability2_CD) ScriptableObject.CreateInstance(typeof(SE_Ability2_CD));
+
+			if (!AsgardLegacy.isChanneling)
+			{
+				se_Ability2_CD.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_cooldown / 2f;
+				player.GetSEMan().AddStatusEffect(se_Ability2_CD, true);
+
+				yield break;
+			}
+
+            se_Ability2_CD.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability2_CD, true);
+
+			AsgardLegacy.isChanneling = false;
+
+			var se_MendingSpirits = (SE_Sentinel_MendingSpirits) ScriptableObject.CreateInstance(typeof(SE_Sentinel_MendingSpirits));
+
+			se_MendingSpirits.m_ttl = Utility.GetLinearValue(
+				currentLevel,
+				GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_healingDurationMin,
+				GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_healingDurationMax,
+				(int) GlobalConfigs.al_svr_ability2UnlockLevel);
+			se_MendingSpirits.m_healing = Utility.GetLinearValue(
+				currentLevel,
+				GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_healingAmountMin,
+				GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_healingAmountMax,
+				(int) GlobalConfigs.al_svr_ability2UnlockLevel);
+			se_MendingSpirits.m_healingInterval = GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_healingInterval;
+			se_MendingSpirits.m_radius = GlobalConfigs_Sentinel.al_svr_sentinel_mendingSpirit_radius;
+			player.GetSEMan().AddStatusEffect(se_MendingSpirits, true);
+
+			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainBuffCast);
+
+			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_Potion_health_Start"), player.transform.position, Quaternion.identity);
+		}
+
+		public static IEnumerator WaitForPurgingFlames(float waitTime, Player player, int currentLevel)
+		{
+			yield return new WaitForSeconds(waitTime);
+
+			var se_Ability4_CD = (SE_Ability4_CD) ScriptableObject.CreateInstance(typeof(SE_Ability4_CD));
+
+			if (!AsgardLegacy.isChanneling)
+			{
+				se_Ability4_CD.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_cooldown / 2f;
+				player.GetSEMan().AddStatusEffect(se_Ability4_CD, true);
+
+				yield break;
+			}
+
+			se_Ability4_CD.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_cooldown;
+			player.GetSEMan().AddStatusEffect(se_Ability4_CD, true);
+
+			AsgardLegacy.isChanneling = false;
+
+			var hitData = new HitData();
+			hitData.m_damage.m_fire = player.m_rightItem.GetDamage().GetTotalDamage()
+				* Utility.GetLinearValue(
+					currentLevel,
+					GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_damageMultiplierMin,
+					GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_damageMultiplierMax,
+					(int) GlobalConfigs.al_svr_ability4UnlockLevel);
+
+			var se_PurgingFlames = (SE_Sentinel_PurgingFlames) ScriptableObject.CreateInstance(typeof(SE_Sentinel_PurgingFlames));
+			se_PurgingFlames.m_staminaOverTimeDuration = se_PurgingFlames.m_healthOverTimeDuration = se_PurgingFlames.m_ttl = GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_duration;
+			se_PurgingFlames.m_healthOverTimeInterval = GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_interval;
+			se_PurgingFlames.m_healthOverTime = Utility.GetLinearValue(
+					currentLevel,
+					GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_healthOverTimeMin,
+					GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_healthOverTimeMax,
+					(int) GlobalConfigs.al_svr_ability4UnlockLevel);
+			se_PurgingFlames.m_staminaOverTime = Utility.GetLinearValue(
+					currentLevel,
+					GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_staminaOverTimeMin,
+					GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_staminaOverTimeMax,
+					(int) GlobalConfigs.al_svr_ability4UnlockLevel);
+
+			var nbHits = 0;
+			var characters = Character.GetAllCharacters();
+			foreach (var character in characters)
+			{
+				if ((character.transform.position - player.transform.position).magnitude > GlobalConfigs_Sentinel.al_svr_sentinel_purgingFlames_radius
+					|| !Utility.LOS_IsValid(character, player.transform.position, player.GetCenterPoint()))
+					continue;
+
+				nbHits++;
+				if (BaseAI.IsEnemy(character, player))
+					character.Damage(hitData);
+				else if(character.IsPlayer())
+                {
+					var seMan = character.GetSEMan();
+					foreach (var se in Utility.CleansedSE)
+					{
+						if (!seMan.HaveStatusEffect(se))
+							continue;
+						seMan.RemoveStatusEffect(se);
+					}
+
+					seMan.AddStatusEffect(se_PurgingFlames, true);
+					Object.Instantiate(ZNetScene.instance.GetPrefab("vfx_Potion_health_medium"), player.GetCenterPoint(), Quaternion.identity);
+					Object.Instantiate(ZNetScene.instance.GetPrefab("vfx_Potion_stamina_medium"), player.GetCenterPoint(), Quaternion.identity);
+				}
+			}
+
+			player.RaiseSkill(AsgardLegacy.ClassLevelSkill, GlobalConfigs.al_svr_skillGainAoeBaseHit + GlobalConfigs.al_svr_skillGainAoeMultipleHit * (nbHits - 1));
+
+			Object.Instantiate(ZNetScene.instance.GetPrefab("vfx_spawn_large"), player.GetCenterPoint(), Quaternion.identity);
+			Object.Instantiate(ZNetScene.instance.GetPrefab("sfx_bowl_AddItem"), player.transform.position, Quaternion.identity);
+		}
 	}
 }
